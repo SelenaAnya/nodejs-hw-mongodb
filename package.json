@@ -7,7 +7,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "seed": "node src/scripts/seedContacts.js"
   },
   "keywords": [],
   "author": "",
@@ -16,20 +17,13 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "mongoose": "^8.17.0",
+    "mongoose": "^8.0.3",
     "pino": "^8.17.2",
-    "pino-http": "^8.6.1"
+    "pino-http": "^8.5.0"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "nodemon": "^3.0.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SelenaAnya/nodejs-hw-mongodb.git"
-  },
-  "bugs": {
-    "url": "https://github.com/SelenaAnya/nodejs-hw-mongodb/issues"
-  },
-  "homepage": "https://github.com/SelenaAnya/nodejs-hw-mongodb#readme"
+    "nodemon": "^3.0.2",
+    "pino-pretty": "^10.3.1"
+  }
 }
