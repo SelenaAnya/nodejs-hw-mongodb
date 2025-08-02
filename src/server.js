@@ -8,6 +8,7 @@ const PORT = Number(process.env.PORT) || 3000;
 export const setupServer = () => {
     const app = express();
 
+
     app.use(
         pino({
             transport: process.env.NODE_ENV !== 'production' ? {
