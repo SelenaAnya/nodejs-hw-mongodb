@@ -31,9 +31,5 @@
   "bugs": {
     "url": "https://github.com/SelenaAnya/nodejs-hw-mongodb/issues"
   },
-  "homepage": "https://github.com/SelenaAnya/nodejs-hw-mongodb#readme",
-  "semi": true,
-  "singleQuote": true,
-  "trailingComma": "all",
-  "tabWidth": 2
+  "homepage": "https://github.com/SelenaAnya/nodejs-hw-mongodb#readme"
 }
