@@ -13,24 +13,29 @@ import { createContactSchema, updateContactSchema } from '../validation/contacts
 
 const router = Router();
 
+// GET /api/contacts
 router.get('/contacts', ctrlWrapper(getContactsController));
 
+// GET /api/contacts/:contactId
 router.get('/contacts/:contactId',
     isValidId,
     ctrlWrapper(getContactByIdController)
 );
 
+// POST /api/contacts
 router.post('/contacts',
     validateBody(createContactSchema),
     ctrlWrapper(createContactController)
 );
 
+// PATCH /api/contacts/:contactId
 router.patch('/contacts/:contactId',
     isValidId,
     validateBody(updateContactSchema),
     ctrlWrapper(patchContactController)
 );
 
+// DELETE /api/contacts/:contactId
 router.delete('/contacts/:contactId',
     isValidId,
     ctrlWrapper(deleteContactController)
