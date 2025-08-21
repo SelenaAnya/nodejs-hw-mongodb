@@ -9,9 +9,13 @@ import {
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { isValidId } from '../middlewares/isValidId.js';
+import { authenticate } from '../middlewares/authenticate.js';
 import { createContactSchema, updateContactSchema } from '../validation/contacts.js';
 
 const router = Router();
+
+// Apply authentication to all routes
+router.use(authenticate);
 
 // GET /api/contacts
 router.get('/contacts', ctrlWrapper(getContactsController));

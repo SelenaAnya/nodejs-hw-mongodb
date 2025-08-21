@@ -2,6 +2,7 @@ import express from 'express';
 import pino from 'pino-http';
 import cors from 'cors';
 import contactsRouter from './routers/contacts.js';
+import authRouter from './routers/auth.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 
@@ -37,6 +38,7 @@ export const setupServer = () => {
 
     // API routes
     app.use('/api', contactsRouter);
+    app.use('/auth', authRouter);
 
     // 404 handler for undefined routes
     app.use('*', notFoundHandler);
