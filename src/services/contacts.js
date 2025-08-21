@@ -1,38 +1,30 @@
 import { ContactsCollection } from '../db/models/contact.js';
 import { calculatePaginationData } from '../utils/calculatePaginationData.js';
+import { SORT_ORDER } from '../constants/index.js';
 
 export const getAllContacts = async ({
   page = 1,
   perPage = 10,
-  sortBy,
-  sortOrder = 'asc',
+  sortOrder = SORT_ORDER.ASC,
+  sortBy = '_id',
   filter = {},
-  userId
+  userId,
 }) => {
   const limit = perPage;
   const skip = (page - 1) * perPage;
 
-  // Build filter object
-  const contactsFilter = { userId };
-  if (filter.type) {
-    contactsFilter.contactType = filter.type;
-  }
-  if (filter.isFavourite !== undefined) {
-    contactsFilter.isFavourite = filter.isFavourite;
-  }
+  const contactsQuery = ContactsCollection.find({ userId, ...filter });
 
-  const contactsQuery = ContactsCollection.find(contactsFilter);
+  const contactsCount = await ContactsCollection.find({
+    userId,
+    ...filter,
+  }).countDocuments();
 
-  // Apply sorting if sortBy is provided
-  if (sortBy) {
-    const sortOptions = {};
-    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    contactsQuery.sort(sortOptions);
-  }
-
-  const contactsCount = await ContactsCollection.find(contactsFilter).countDocuments();
-
-  const contacts = await contactsQuery.skip(skip).limit(limit).exec();
+  const contacts = await contactsQuery
+    .skip(skip)
+    .limit(limit)
+    .sort({ [sortBy]: sortOrder })
+    .exec();
 
   const paginationData = calculatePaginationData(contactsCount, perPage, page);
 
@@ -43,15 +35,15 @@ export const getAllContacts = async ({
 };
 
 export const getContactById = async (contactId, userId) => {
-  const contact = await ContactsCollection.findOne({
-    _id: contactId,
-    userId
-  });
+  const contact = await ContactsCollection.findOne({ _id: contactId, userId });
   return contact;
 };
 
-export const createContact = async (payload) => {
-  const contact = await ContactsCollection.create(payload);
+export const createContact = async (payload, userId) => {
+  const contact = await ContactsCollection.create({
+    ...payload,
+    userId,
+  });
   return contact;
 };
 
@@ -68,7 +60,10 @@ export const updateContact = async (contactId, payload, userId, options = {}) =>
 
   if (!rawResult || !rawResult.value) return null;
 
-  return rawResult.value;
+  return {
+    contact: rawResult.value,
+    isNew: Boolean(rawResult?.lastErrorObject?.upserted),
+  };
 };
 
 export const deleteContact = async (contactId, userId) => {
@@ -76,6 +71,5 @@ export const deleteContact = async (contactId, userId) => {
     _id: contactId,
     userId,
   });
-
   return contact;
 };

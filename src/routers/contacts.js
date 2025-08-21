@@ -9,40 +9,42 @@ import {
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { isValidId } from '../middlewares/isValidId.js';
+import {
+    createContactSchema,
+    updateContactSchema,
+} from '../validation/contacts.js';
 import { authenticate } from '../middlewares/authenticate.js';
-import { createContactSchema, updateContactSchema } from '../validation/contacts.js';
 
 const router = Router();
 
-// Apply authentication to all routes
+// Застосовуємо authenticate middleware до всіх роутів
 router.use(authenticate);
 
-// GET /api/contacts
-router.get('/contacts', ctrlWrapper(getContactsController));
+router.get('/', ctrlWrapper(getContactsController));
 
-// GET /api/contacts/:contactId
-router.get('/contacts/:contactId',
+router.get(
+    '/:contactId',
     isValidId,
-    ctrlWrapper(getContactByIdController)
+    ctrlWrapper(getContactByIdController),
 );
 
-// POST /api/contacts
-router.post('/contacts',
+router.post(
+    '/',
     validateBody(createContactSchema),
-    ctrlWrapper(createContactController)
+    ctrlWrapper(createContactController),
 );
 
-// PATCH /api/contacts/:contactId
-router.patch('/contacts/:contactId',
+router.patch(
+    '/:contactId',
     isValidId,
     validateBody(updateContactSchema),
-    ctrlWrapper(patchContactController)
+    ctrlWrapper(patchContactController),
 );
 
-// DELETE /api/contacts/:contactId
-router.delete('/contacts/:contactId',
+router.delete(
+    '/:contactId',
     isValidId,
-    ctrlWrapper(deleteContactController)
+    ctrlWrapper(deleteContactController),
 );
 
 export default router;

@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import { model, Schema } from 'mongoose';
 
-const userSchema = new mongoose.Schema(
+const usersSchema = new Schema(
     {
         name: {
             type: String,
@@ -10,8 +10,6 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
-            lowercase: true,
-            match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email'],
         },
         password: {
             type: String,
@@ -24,7 +22,10 @@ const userSchema = new mongoose.Schema(
     },
 );
 
-// Ensure email uniqueness at database level
-userSchema.index({ email: 1 }, { unique: true });
+usersSchema.methods.toJSON = function () {
+    const obj = this.toObject();
+    delete obj.password;
+    return obj;
+};
 
-export const UsersCollection = mongoose.model('users', userSchema);
+export const UsersCollection = model('users', usersSchema);
