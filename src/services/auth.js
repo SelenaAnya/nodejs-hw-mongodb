@@ -22,6 +22,25 @@ const createSession = () => {
     };
 };
 
+export const registerUser = async (payload) => {
+    // Перевірка чи користувач вже існує
+    const existingUser = await UsersCollection.findOne({ email: payload.email });
+    if (existingUser) {
+        throw createHttpError(409, 'Email in use');
+    }
+
+    // Хешування пароля
+    const encryptedPassword = await bcrypt.hash(payload.password, 10);
+
+    // Створення користувача
+    const user = await UsersCollection.create({
+        ...payload,
+        password: encryptedPassword,
+    });
+
+    return user;
+};
+
 export const loginUser = async (payload) => {
     const user = await UsersCollection.findOne({ email: payload.email });
     if (!user) {

@@ -27,6 +27,7 @@ export const setupServer = () => {
             message: 'API is working!',
             availableEndpoints: {
                 auth: {
+                    register: 'POST /api/auth/register',
                     login: 'POST /api/auth/login',
                     refresh: 'POST /api/auth/refresh',
                     logout: 'POST /api/auth/logout'
