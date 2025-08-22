@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { setupServer } from './server.js';
+import { setupServer } from './app.js'; // Змінено з './server.js' на './app.js'
 import initMongoConnection from './db/initMongoConnection.js';
 
 // Load environment variables
