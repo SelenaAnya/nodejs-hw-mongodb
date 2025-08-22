@@ -11,6 +11,8 @@ import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
 
 export const getContactsController = async (req, res) => {
+    console.log('User in getContactsController:', req.user); // Debug log
+
     const { page, perPage } = parsePaginationParams(req.query);
     const { sortBy, sortOrder } = parseSortParams(req.query);
     const filter = parseFilterParams(req.query);
@@ -32,6 +34,8 @@ export const getContactsController = async (req, res) => {
 };
 
 export const getContactByIdController = async (req, res, next) => {
+    console.log('User in getContactByIdController:', req.user); // Debug log
+
     const { contactId } = req.params;
     const contact = await getContactById(contactId, req.user._id);
 
@@ -47,6 +51,14 @@ export const getContactByIdController = async (req, res, next) => {
 };
 
 export const createContactController = async (req, res) => {
+    console.log('User in createContactController:', req.user); // Debug log
+    console.log('Request body:', req.body); // Debug log
+
+    // Перевірка наявності користувача
+    if (!req.user || !req.user._id) {
+        throw createHttpError(401, 'User not authenticated');
+    }
+
     const contact = await createContact(req.body, req.user._id);
 
     res.status(201).json({
@@ -57,7 +69,13 @@ export const createContactController = async (req, res) => {
 };
 
 export const patchContactController = async (req, res, next) => {
+    console.log('User in patchContactController:', req.user); // Debug log
+
     const { contactId } = req.params;
+
+    if (!req.user || !req.user._id) {
+        throw createHttpError(401, 'User not authenticated');
+    }
 
     const result = await updateContact(contactId, req.body, req.user._id);
 
@@ -74,7 +92,13 @@ export const patchContactController = async (req, res, next) => {
 };
 
 export const deleteContactController = async (req, res, next) => {
+    console.log('User in deleteContactController:', req.user); // Debug log
+
     const { contactId } = req.params;
+
+    if (!req.user || !req.user._id) {
+        throw createHttpError(401, 'User not authenticated');
+    }
 
     const contact = await deleteContact(contactId, req.user._id);
 

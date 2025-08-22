@@ -21,6 +21,27 @@ export const setupServer = () => {
         });
     });
 
+    // API status route
+    app.get('/api', (req, res) => {
+        res.status(200).json({
+            message: 'API is working!',
+            availableEndpoints: {
+                auth: {
+                    login: 'POST /api/auth/login',
+                    refresh: 'POST /api/auth/refresh',
+                    logout: 'POST /api/auth/logout'
+                },
+                contacts: {
+                    getAll: 'GET /api/contacts',
+                    getById: 'GET /api/contacts/:id',
+                    create: 'POST /api/contacts',
+                    update: 'PATCH /api/contacts/:id',
+                    delete: 'DELETE /api/contacts/:id'
+                }
+            }
+        });
+    });
+
     app.use(express.json());
     app.use(cors());
     app.use(cookieParser());
