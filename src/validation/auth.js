@@ -1,63 +1,42 @@
-import { ONE_DAY } from '../constants/index.js';
-import {
-    registerUser,
-    loginUser,
-    logoutUser,
-    refreshUsersSession
-} from '../services/auth.js';
+import Joi from 'joi';
 
-const setupSession = (res, session) => {
-    res.cookie('refreshToken', session.refreshToken, {
-        httpOnly: true,
-        expires: new Date(Date.now() + ONE_DAY),
-    });
-};
+export const registerUserSchema = Joi.object({
+    name: Joi.string()
+        .min(2)
+        .max(50)
+        .required()
+        .messages({
+            'string.min': 'Name must be at least 2 characters long',
+            'string.max': 'Name must be no more than 50 characters long',
+            'any.required': 'Name is required'
+        }),
+    email: Joi.string()
+        .email()
+        .required()
+        .messages({
+            'string.email': 'Please provide a valid email address',
+            'any.required': 'Email is required'
+        }),
+    password: Joi.string()
+        .min(6)
+        .required()
+        .messages({
+            'string.min': 'Password must be at least 6 characters long',
+            'any.required': 'Password is required'
+        }),
+});
 
-export const registerUserController = async (req, res) => {
-    const user = await registerUser(req.body);
-
-    res.status(201).json({
-        status: 201,
-        message: 'Successfully registered a user!',
-        data: user,
-    });
-};
-
-export const loginUserController = async (req, res) => {
-    const session = await loginUser(req.body);
-
-    setupSession(res, session);
-
-    res.json({
-        status: 200,
-        message: 'Successfully logged in an user!',
-        data: {
-            accessToken: session.accessToken,
-        },
-    });
-};
-
-export const refreshUserController = async (req, res) => {
-    const session = await refreshUsersSession({
-        refreshToken: req.cookies.refreshToken,
-    });
-
-    setupSession(res, session);
-
-    res.json({
-        status: 200,
-        message: 'Successfully refreshed a session!',
-        data: {
-            accessToken: session.accessToken,
-        },
-    });
-};
-
-export const logoutUserController = async (req, res) => {
-    if (req.cookies.refreshToken) {
-        await logoutUser(req.cookies.refreshToken);
-    }
-
-    res.clearCookie('refreshToken');
-    res.status(204).send();
-};
+export const loginUserSchema = Joi.object({
+    email: Joi.string()
+        .email()
+        .required()
+        .messages({
+            'string.email': 'Please provide a valid email address',
+            'any.required': 'Email is required'
+        }),
+    password: Joi.string()
+        .required()
+        .messages({
+            'any.required': 'Password is required'
+        }),
+});

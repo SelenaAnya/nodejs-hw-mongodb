@@ -18,6 +18,7 @@ export const setupServer = () => {
         res.status(200).json({
             message: 'Server is running!',
             timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV || 'development',
         });
     });
 
@@ -25,6 +26,7 @@ export const setupServer = () => {
     app.get('/api', (req, res) => {
         res.status(200).json({
             message: 'API is working!',
+            version: '1.0.0',
             availableEndpoints: {
                 auth: {
                     register: 'POST /api/auth/register',
@@ -43,16 +45,28 @@ export const setupServer = () => {
         });
     });
 
-    app.use(express.json());
-    app.use(cors());
+    // Middleware order is important!
+    app.use(express.json({ limit: '1mb' }));
+
+    // CORS configuration
+    app.use(cors({
+        origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true,
+        credentials: true, // Allow cookies
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    }));
+
     app.use(cookieParser());
 
+    // Logging middleware
     app.use(
         pino({
             transport: process.env.NODE_ENV !== 'production' ? {
                 target: 'pino-pretty',
                 options: {
-                    colorize: true
+                    colorize: true,
+                    translateTime: 'SYS:standard',
+                    ignore: 'pid,hostname'
                 }
             } : undefined,
         }),
@@ -61,13 +75,17 @@ export const setupServer = () => {
     // Use API routes
     app.use('/api', router);
 
+    // 404 handler for undefined routes
     app.use('*', notFoundHandler);
+
+    // Global error handler (must be last)
     app.use(errorHandler);
 
     app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Server is running on port ${PORT}`);
-        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`MongoDB URL configured: ${process.env.MONGODB_URL ? 'Yes' : 'No'}`);
+        console.log(`🚀 Server is running on port ${PORT}`);
+        console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`🗄️  MongoDB URL configured: ${process.env.MONGODB_URL ? '✅ Yes' : '❌ No'}`);
+        console.log(`🌐 API available at: http://localhost:${PORT}/api`);
     });
 
     return app;

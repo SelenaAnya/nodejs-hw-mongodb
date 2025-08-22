@@ -24,8 +24,16 @@ export const parseFilterParams = (query) => {
     const parsedType = parseContactType(type);
     const parsedIsFavourite = parseIsFavourite(isFavourite);
 
-    return {
-        type: parsedType,
-        isFavourite: parsedIsFavourite,
-    };
+    // Create a filter object by removing the undefined value
+    const filters = {};
+
+    if (parsedType !== undefined) {
+        filters.contactType = parsedType;
+    }
+
+    if (parsedIsFavourite !== undefined) {
+        filters.isFavourite = parsedIsFavourite;
+    }
+
+    return filters;
 };

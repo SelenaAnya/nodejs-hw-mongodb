@@ -1,3 +1,4 @@
+import createHttpError from 'http-errors';
 import { ONE_DAY } from '../constants/index.js';
 import {
     registerUser,
@@ -10,10 +11,14 @@ const setupSession = (res, session) => {
     res.cookie('refreshToken', session.refreshToken, {
         httpOnly: true,
         expires: new Date(Date.now() + ONE_DAY),
+        secure: process.env.NODE_ENV === 'production', // Added for security
+        sameSite: 'strict', // Added for security
     });
 };
 
 export const registerUserController = async (req, res) => {
+    console.log('Registration attempt:', req.body.email);
+
     const user = await registerUser(req.body);
 
     res.status(201).json({
@@ -24,6 +29,8 @@ export const registerUserController = async (req, res) => {
 };
 
 export const loginUserController = async (req, res) => {
+    console.log('Login attempt:', req.body.email);
+
     const session = await loginUser(req.body);
 
     setupSession(res, session);
@@ -38,6 +45,12 @@ export const loginUserController = async (req, res) => {
 };
 
 export const refreshUserController = async (req, res) => {
+    console.log('Token refresh attempt');
+
+    if (!req.cookies.refreshToken) {
+        throw createHttpError(400, 'Refresh token is required');
+    }
+
     const session = await refreshUsersSession({
         refreshToken: req.cookies.refreshToken,
     });
@@ -54,6 +67,8 @@ export const refreshUserController = async (req, res) => {
 };
 
 export const logoutUserController = async (req, res) => {
+    console.log('Logout attempt');
+
     if (req.cookies.refreshToken) {
         await logoutUser(req.cookies.refreshToken);
     }
