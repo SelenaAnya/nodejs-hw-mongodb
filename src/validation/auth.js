@@ -39,4 +39,4 @@ export const loginUserSchema = Joi.object({
         .messages({
             'any.required': 'Password is required'
         }),
-});
+}).options({ stripUnknown: true }); // Видаляє невідомі поля замість помилки

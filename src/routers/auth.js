@@ -11,6 +11,22 @@ import {
 
 const router = Router();
 
+// Тестовий роут для перевірки тіла запиту
+router.post('/debug', (req, res) => {
+    console.log('=== DEBUG ROUTE ===');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    console.log('Content-Type:', req.get('Content-Type'));
+    console.log('==================');
+
+    res.json({
+        message: 'Debug info',
+        headers: req.headers,
+        body: req.body,
+        contentType: req.get('Content-Type')
+    });
+});
+
 router.post(
     '/register',
     validateBody(registerUserSchema),
