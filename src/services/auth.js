@@ -7,7 +7,7 @@ import { SessionsCollection } from '../db/models/session.js';
 
 import {
     FIFTEEN_MINUTES,
-    ONE_DAY,
+    THIRTY_DAYS,
 } from '../constants/index.js';
 
 const createSession = () => {
@@ -18,7 +18,7 @@ const createSession = () => {
         accessToken,
         refreshToken,
         accessTokenValidUntil: new Date(Date.now() + FIFTEEN_MINUTES),
-        refreshTokenValidUntil: new Date(Date.now() + ONE_DAY * 30),
+        refreshTokenValidUntil: new Date(Date.now() + THIRTY_DAYS),
     };
 };
 
@@ -27,7 +27,7 @@ export const registerUser = async (payload) => {
 
     // Check if the user already exists
     const existingUser = await UsersCollection.findOne({
-        email: payload.email.toLowerCase() // Нормалізація email
+        email: payload.email.toLowerCase()
     });
 
     if (existingUser) {
@@ -47,7 +47,7 @@ export const registerUser = async (payload) => {
     // Password hashing
     const encryptedPassword = await bcrypt.hash(payload.password, 10);
 
-    // Create a user with normalized email
+    // Create a user with a normalized email
     const user = await UsersCollection.create({
         ...payload,
         email: payload.email.toLowerCase(),
@@ -99,7 +99,7 @@ export const refreshUsersSession = async ({ refreshToken }) => {
     console.log('Refreshing session');
 
     if (!refreshToken) {
-        throw createHttpError(400, 'Refresh token is required');
+        throw createHttpError(401, 'Refresh token is required');
     }
 
     const session = await SessionsCollection.findOne({ refreshToken });
@@ -119,7 +119,7 @@ export const refreshUsersSession = async ({ refreshToken }) => {
         throw createHttpError(401, 'Session token expired');
     }
 
-    // Delete the old session
+    // Delete an old session
     await SessionsCollection.deleteOne({ _id: session._id });
 
     const newSession = createSession();
@@ -137,7 +137,7 @@ export const logoutUser = async (refreshToken) => {
     console.log('Logging out user');
 
     if (!refreshToken) {
-        return; // Не кидаємо помилку, просто повертаємося
+        return; // We don't quit, we just go back
     }
 
     const result = await SessionsCollection.deleteOne({ refreshToken });

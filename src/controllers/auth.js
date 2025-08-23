@@ -1,5 +1,5 @@
 import createHttpError from 'http-errors';
-import { ONE_DAY } from '../constants/index.js';
+import { THIRTY_DAYS } from '../constants/index.js';
 import {
     registerUser,
     loginUser,
@@ -10,9 +10,9 @@ import {
 const setupSession = (res, session) => {
     res.cookie('refreshToken', session.refreshToken, {
         httpOnly: true,
-        expires: new Date(Date.now() + ONE_DAY),
-        secure: process.env.NODE_ENV === 'production', // Added for security
-        sameSite: 'strict', // Added for security
+        expires: new Date(Date.now() + THIRTY_DAYS),
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
     });
 };
 
@@ -48,7 +48,7 @@ export const refreshUserController = async (req, res) => {
     console.log('Token refresh attempt');
 
     if (!req.cookies.refreshToken) {
-        throw createHttpError(400, 'Refresh token is required');
+        throw createHttpError(401, 'Refresh token is required');
     }
 
     const session = await refreshUsersSession({

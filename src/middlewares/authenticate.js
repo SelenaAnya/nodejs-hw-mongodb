@@ -55,7 +55,7 @@ export const authenticate = async (req, res, next) => {
 
         if (!user) {
             console.log('User not found in database for session');
-            // Deleting a session for a non-existent user
+            // Delete a session for a non-existent user
             await SessionsCollection.deleteOne({ _id: session._id });
             return next(createHttpError(401, 'User not found'));
         }
