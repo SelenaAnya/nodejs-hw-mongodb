@@ -72,20 +72,25 @@ export const setupServer = () => {
         }),
     );
 
-    // Use API routes
+    // IMPORTANT: Use the main router with the /api prefix
     app.use('/api', router);
 
-    // 404 handler for undefined routes
+    // 404 handler for undefined routers
     app.use('*', notFoundHandler);
 
-    // Global error handler (must be last)
+    // Global error handler (should be the last one)
     app.use(errorHandler);
 
     app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 Server is running on port ${PORT}`);
-        console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`🗄️  MongoDB URL configured: ${process.env.MONGODB_URL ? '✅ Yes' : '❌ No'}`);
-        console.log(`🌐 API available at: http://localhost:${PORT}/api`);
+        console.log(`Server is running on port ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`MongoDB URL configured: ${process.env.MONGODB_URL ? '✅ Yes' : '❌ No'}`);
+        console.log(`API available at: http://localhost:${PORT}/api`);
+        console.log(`Auth endpoints:`);
+        console.log(`   POST http://localhost:${PORT}/api/auth/register`);
+        console.log(`   POST http://localhost:${PORT}/api/auth/login`);
+        console.log(`   POST http://localhost:${PORT}/api/auth/refresh`);
+        console.log(`   POST http://localhost:${PORT}/api/auth/logout`);
     });
 
     return app;
