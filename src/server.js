@@ -36,9 +36,9 @@ export const setupServer = () => {
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true }));
 
-    // API routes
-    app.use('/api', contactsRouter);
-    app.use('/auth', authRouter);
+    // // API routes
+    // app.use('/api', contactsRouter);
+    // app.use('/auth', authRouter);
 
     // 404 handler for undefined routes
     app.use('*', notFoundHandler);
