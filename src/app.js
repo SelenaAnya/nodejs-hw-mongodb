@@ -72,8 +72,8 @@ export const setupServer = () => {
         }),
     );
 
-    // IMPORTANT: Use the main router with the /api prefix
-    app.use('/api', router);
+    // Main router
+    app.use(router);
 
     // 404 handler for undefined routers
     app.use('*', notFoundHandler);
