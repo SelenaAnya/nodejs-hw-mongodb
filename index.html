@@ -1,0 +1,27 @@
+<!-- Reset Password Request Form -->
+<form id="reset-request-form" method="POST" action="/auth/send-reset-email">
+  <h2>Запит на скидання паролю</h2>
+  <label for="email">Email:</label>
+  <input type="email" name="email" required />
+  <button type="submit">Надіслати лист</button>
+</form>
+
+<!-- Password Reset Form -->
+<form id="reset-password-form" method="POST" action="/auth/reset-pwd">
+  <h2>Скидання паролю</h2>
+  <label for="token">Token:</label>
+  <input type="text" name="token" required />
+  <label for="password">Новий пароль:</label>
+  <input type="password" name="password" required />
+  <button type="submit">Змінити пароль</button>
+</form>
+
+<!-- Contact Photo Upload Form -->
+<form id="contact-photo-form" method="POST" action="/contacts" enctype="multipart/form-data">
+  <h2>Додати контакт</h2>
+  <label for="name">Ім’я:</label>
+  <input type="text" name="name" required />
+  <label for="photo">Фото:</label>
+  <input type="file" name="photo" accept="image/*" required />
+  <button type="submit">Зберегти контакт</button>
+</form>
