@@ -9,6 +9,7 @@ import {
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { isValidId } from '../middlewares/isValidId.js';
+import { uploadPhoto, handleUploadError } from '../middlewares/multer.js';
 import {
     createContactSchema,
     updateContactSchema,
@@ -17,7 +18,7 @@ import { authenticate } from '../middlewares/authenticate.js';
 
 const router = Router();
 
-// Застосовуємо authenticate middleware до всіх роутів
+// Apply authenticate middleware to all routers
 router.use(authenticate);
 
 router.get('/', ctrlWrapper(getContactsController));
@@ -28,8 +29,11 @@ router.get(
     ctrlWrapper(getContactByIdController),
 );
 
+// Routing to create a contact with a photo
 router.post(
     '/',
+    uploadPhoto,
+    handleUploadError,
     validateBody(createContactSchema),
     ctrlWrapper(createContactController),
 );
@@ -37,6 +41,8 @@ router.post(
 router.patch(
     '/:contactId',
     isValidId,
+    uploadPhoto,
+    handleUploadError,
     validateBody(updateContactSchema),
     ctrlWrapper(patchContactController),
 );

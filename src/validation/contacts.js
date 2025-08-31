@@ -25,6 +25,7 @@ export const createContactSchema = Joi.object({
         .email()
         .max(50)
         .optional()
+        .allow('')
         .messages({
             'string.email': 'Please provide a valid email address',
             'string.max': 'Email must be no more than 50 characters long'
@@ -36,6 +37,12 @@ export const createContactSchema = Joi.object({
         .default('personal')
         .messages({
             'any.only': 'Contact type must be one of: work, home, personal'
+        }),
+    photo: Joi.string()
+        .uri()
+        .optional()
+        .messages({
+            'string.uri': 'Photo must be a valid URL'
         }),
 });
 
@@ -62,6 +69,7 @@ export const updateContactSchema = Joi.object({
         .email()
         .max(50)
         .optional()
+        .allow('')
         .messages({
             'string.email': 'Please provide a valid email address',
             'string.max': 'Email must be no more than 50 characters long'
@@ -73,6 +81,12 @@ export const updateContactSchema = Joi.object({
         .optional()
         .messages({
             'any.only': 'Contact type must be one of: work, home, personal'
+        }),
+    photo: Joi.string()
+        .uri()
+        .optional()
+        .messages({
+            'string.uri': 'Photo must be a valid URL'
         }),
 }).min(1).messages({
     'object.min': 'At least one field is required for update'
