@@ -46,6 +46,9 @@ export const setupServer = () => {
     // Global error handler
     app.use(errorHandler);
 
+    // Handle CORS preflight requests
+    app.options('*', cors());
+
     // Start server
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`Server is running on port ${PORT}`);
