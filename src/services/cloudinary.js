@@ -8,11 +8,50 @@ cloudinary.config({
     api_secret: env('CLOUDINARY_API_SECRET'),
 });
 
-// Uploading the image to Cloudinary
+// Upload image from buffer to Cloudinary
+export const uploadImageFromBuffer = async (buffer, options = {}) => {
+    try {
+        const defaultOptions = {
+            folder: 'contacts',
+            use_filename: false,
+            unique_filename: true,
+            overwrite: false,
+            transformation: [
+                { width: 500, height: 500, crop: 'limit' },
+                { quality: 'auto' },
+                { fetch_format: 'auto' }
+            ]
+        };
+
+        const uploadOptions = { ...defaultOptions, ...options };
+
+        // Upload buffer to Cloudinary
+        const result = await new Promise((resolve, reject) => {
+            cloudinary.uploader.upload_stream(
+                uploadOptions,
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            ).end(buffer);
+        });
+
+        console.log('Image uploaded successfully to Cloudinary:', result.secure_url);
+        return {
+            url: result.secure_url,
+            publicId: result.public_id
+        };
+    } catch (error) {
+        console.error('Cloudinary upload error:', error);
+        throw new Error('Failed to upload image to Cloudinary');
+    }
+};
+
+// Uploading the image to Cloudinary (legacy method for file path)
 export const uploadImage = async (filePath, options = {}) => {
     try {
         const defaultOptions = {
-            folder: 'contacts', // Folder for organizing images
+            folder: 'contacts',
             use_filename: true,
             unique_filename: false,
             overwrite: true,

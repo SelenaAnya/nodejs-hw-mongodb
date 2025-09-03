@@ -1,21 +1,9 @@
 import multer from 'multer';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import cloudinary from '../services/cloudinary.js';
 import createHttpError from 'http-errors';
+import path from 'path';
 
-// Storage settings in Cloudinary
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'contacts',
-        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-        transformation: [
-            { width: 500, height: 500, crop: 'limit' },
-            { quality: 'auto' },
-            { fetch_format: 'auto' }
-        ]
-    },
-});
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
 
 // File filter - allow only images
 const fileFilter = (req, file, cb) => {
@@ -25,7 +13,7 @@ const fileFilter = (req, file, cb) => {
         mimetype: file.mimetype
     });
 
-    // Перевіряємо MIME тип
+    // Check MIME type
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
     } else {
@@ -34,19 +22,19 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Setting up a multer
+// Configure multer
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024,
+        fileSize: 5 * 1024 * 1024, // 5MB limit
     },
 });
 
 // Middleware for uploading a single file with the 'photo' field
 export const uploadPhoto = upload.single('photo');
 
-// Middleware for download errors processing
+// Middleware for handling upload errors
 export const handleUploadError = (error, req, res, next) => {
     console.error('Upload error:', error);
 
