@@ -78,6 +78,10 @@ export const setupServer = () => {
         }),
     );
 
+    // Serve static files (for testing HTML forms)
+    app.use(express.static('project/public'));
+    app.use('/css', express.static('project/css'));
+
     // Main API router
     app.use('/api', router);
 
