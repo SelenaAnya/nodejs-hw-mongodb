@@ -52,4 +52,17 @@ router.post(
     ctrlWrapper(resetPasswordController),
 );
 
+// Add this to src/routers/auth.js for testing
+router.get('/register', (req, res) => {
+    res.json({
+        message: 'Registration endpoint - use POST method',
+        required_fields: ['name', 'email', 'password'],
+        example: {
+            name: 'John Doe',
+            email: 'john@example.com',
+            password: 'password123'
+        }
+    });
+});
+
 export default router;
