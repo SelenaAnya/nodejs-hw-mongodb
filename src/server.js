@@ -32,13 +32,15 @@ export const setupServer = () => {
                     register: 'POST /api/auth/register',
                     login: 'POST /api/auth/login',
                     refresh: 'POST /api/auth/refresh',
-                    logout: 'POST /api/auth/logout'
+                    logout: 'POST /api/auth/logout',
+                    sendResetEmail: 'POST /api/auth/send-reset-email',
+                    resetPassword: 'POST /api/auth/reset-pwd'
                 },
                 contacts: {
                     getAll: 'GET /api/contacts',
                     getById: 'GET /api/contacts/:id',
-                    create: 'POST /api/contacts',
-                    update: 'PATCH /api/contacts/:id',
+                    create: 'POST /api/contacts (supports multipart/form-data for photo)',
+                    update: 'PATCH /api/contacts/:id (supports multipart/form-data for photo)',
                     delete: 'DELETE /api/contacts/:id'
                 }
             }
@@ -76,8 +78,8 @@ export const setupServer = () => {
         }),
     );
 
-    // Main router
-    app.use(router);
+    // Main API router
+    app.use('/api', router);
 
     // 404 handler for undefined routes
     app.use('*', notFoundHandler);
@@ -95,6 +97,8 @@ export const setupServer = () => {
         console.log(`   POST http://localhost:${PORT}/api/auth/login`);
         console.log(`   POST http://localhost:${PORT}/api/auth/refresh`);
         console.log(`   POST http://localhost:${PORT}/api/auth/logout`);
+        console.log(`   POST http://localhost:${PORT}/api/auth/send-reset-email`);
+        console.log(`   POST http://localhost:${PORT}/api/auth/reset-pwd`);
         console.log(`Contact endpoints:`);
         console.log(`   GET  http://localhost:${PORT}/api/contacts`);
         console.log(`   POST http://localhost:${PORT}/api/contacts`);

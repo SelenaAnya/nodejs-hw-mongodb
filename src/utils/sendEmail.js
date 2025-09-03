@@ -50,25 +50,38 @@ export const sendResetPasswordEmail = async (email, resetToken) => {
         <head>
             <meta charset="utf-8">
             <title>Password Reset</title>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+                .container { background-color: #f8f9fa; padding: 20px; border-radius: 8px; }
+                .header { color: #333; text-align: center; margin-bottom: 20px; }
+                .content { color: #666; line-height: 1.6; }
+                .button {
+                    display: inline-block;
+                    background-color: #007bff;
+                    color: white;
+                    padding: 12px 30px;
+                    text-decoration: none;
+                    border-radius: 4px;
+                    margin: 20px 0;
+                }
+                .footer { color: #666; font-size: 14px; margin-top: 20px; }
+                .center { text-align: center; }
+            </style>
         </head>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
-                <h2 style="color: #333; text-align: center;">Password Reset Request</h2>
-                <p style="color: #666; line-height: 1.6;">
+        <body>
+            <div class="container">
+                <h2 class="header">Password Reset Request</h2>
+                <p class="content">
                     You have requested to reset your password. Click the button below to reset your password:
                 </p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="${resetUrl}"
-                       style="background-color: #007bff; color: white; padding: 12px 30px;
-                              text-decoration: none; border-radius: 4px; display: inline-block;">
-                        Reset Password
-                    </a>
+                <div class="center">
+                    <a href="${resetUrl}" class="button">Reset Password</a>
                 </div>
-                <p style="color: #666; font-size: 14px;">
+                <p class="footer">
                     If you didn't request this password reset, please ignore this email.
                     This link will expire in 5 minutes for security reasons.
                 </p>
-                <p style="color: #666; font-size: 14px;">
+                <p class="footer">
                     If the button doesn't work, copy and paste this link into your browser:
                     <br>
                     <a href="${resetUrl}" style="color: #007bff;">${resetUrl}</a>
@@ -84,3 +97,5 @@ export const sendResetPasswordEmail = async (email, resetToken) => {
         html: htmlContent,
     });
 };
+
+export default sendEmail;
