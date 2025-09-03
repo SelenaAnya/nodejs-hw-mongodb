@@ -1,6 +1,7 @@
 import createHttpError from 'http-errors';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import jwt from 'jsonwebtoken';
 
 import { UsersCollection } from '../db/models/user.js';
 import { SessionsCollection } from '../db/models/session.js';
@@ -9,6 +10,7 @@ import {
     FIFTEEN_MINUTES,
     THIRTY_DAYS,
 } from '../constants/index.js';
+import { env } from '../utils/env.js';
 
 const createSession = () => {
     const accessToken = randomBytes(30).toString('base64');
@@ -142,4 +144,65 @@ export const logoutUser = async (refreshToken) => {
 
     const result = await SessionsCollection.deleteOne({ refreshToken });
     console.log('Sessions deleted:', result.deletedCount);
+};
+
+export const requestResetToken = async (email) => {
+    console.log('Requesting reset token for email:', email);
+
+    const user = await UsersCollection.findOne({
+        email: email.toLowerCase()
+    });
+
+    if (!user) {
+        console.log('User not found for password reset:', email);
+        throw createHttpError(404, 'User not found!');
+    }
+
+    // Create JWT token with 5 minutes expiration
+    const resetToken = jwt.sign(
+        {
+            sub: user._id,
+            email: user.email
+        },
+        env('JWT_SECRET'),
+        {
+            expiresIn: '5m'
+        }
+    );
+
+    console.log('Reset token created successfully for user:', user._id);
+    return resetToken;
+};
+
+export const resetPassword = async (payload) => {
+    const { token, password } = payload;
+
+    console.log('Attempting to reset password with token');
+
+    let decoded;
+    try {
+        decoded = jwt.verify(token, env('JWT_SECRET'));
+    } catch (error) {
+        console.log('Invalid or expired token:', error.message);
+        throw createHttpError(401, 'Token is expired or invalid.');
+    }
+
+    const user = await UsersCollection.findById(decoded.sub);
+    if (!user) {
+        console.log('User not found for decoded token');
+        throw createHttpError(404, 'User not found!');
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update user password
+    await UsersCollection.findByIdAndUpdate(user._id, {
+        password: hashedPassword,
+    });
+
+    // Delete all sessions for this user
+    await SessionsCollection.deleteMany({ userId: user._id });
+
+    console.log('Password reset successfully for user:', user._id);
 };
