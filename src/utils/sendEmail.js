@@ -13,6 +13,8 @@ const transport = nodemailler.createTransport({
     },
 });
 
+await transport.verify();
+
 export const sendEmail = async (to, subject, html) => {
     try {
         const from = getEnvVar('SMTP_FROM');
