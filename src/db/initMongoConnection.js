@@ -3,15 +3,22 @@ import { env } from '../utils/env.js';
 
 export const initMongoConnection = async () => {
     try {
-        const user = env('MONGODB_USER');
-        const password = env('MONGODB_PASSWORD');
-        const url = env('MONGODB_URL');
-        const db = env('MONGODB_DB');
-        await mongoose.connect(
-            `mongodb+srv://${user}:${password}@${url}/${db}?retryWrites=true&w=majority`,
-        );
+        // Use the complete MongoDB URL from environment variables
+        const mongoUrl = env('MONGODB_URL');
+
+        console.log('Connecting to MongoDB...');
+        console.log('MongoDB URL configured:', mongoUrl ? '✅ Yes' : '❌ No');
+
+        await mongoose.connect(mongoUrl, {
+            // Optional: Add connection options for better reliability
+            serverSelectionTimeoutMS: 10000, // 10 seconds
+            socketTimeoutMS: 45000, // 45 seconds
+            maxPoolSize: 10, // Maintain up to 10 socket connections
+        });
+
         console.log('Mongo connection successfully established!');
     } catch (error) {
-        console.log('Error while setting up mongo connection', error);
+        console.error('Error while setting up mongo connection:', error);
+        throw error; // Re-throw to handle in calling code
     }
 };
