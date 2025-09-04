@@ -10,7 +10,7 @@ export const initMongoConnection = async () => {
         console.log('MongoDB URL configured:', mongoUrl ? '✅ Yes' : '❌ No');
 
         // Log the hostname for debugging (without credentials)
-        const urlPattern = /mongodb(?:\+srv)?:\/\/[^:]+:[^@]+@([^\/]+)/;
+        const urlPattern = /mongodb+srv(?:\+srv)?:\/\/[^:]+:[^@]+@([^\/]+)/;
         const match = mongoUrl.match(urlPattern);
         if (match) {
             console.log('Attempting to connect to hostname:', match[1]);
@@ -38,6 +38,17 @@ export const initMongoConnection = async () => {
             console.error('3. Get a fresh connection string from MongoDB Atlas');
             console.error('4. Try using a direct connection string instead of +srv');
             console.error('5. Check if your network/firewall is blocking MongoDB connections');
+            console.error('');
+        }
+
+        if (error.message.includes('IP') && error.message.includes('whitelist')) {
+            console.error('');
+            console.error('IP ADDRESS NOT WHITELISTED - Solution:');
+            console.error('1. Go to MongoDB Atlas (https://cloud.mongodb.com/)');
+            console.error('2. Navigate to Network Access → IP Whitelist');
+            console.error('3. Click "Add IP Address"');
+            console.error('4. Either add your current IP or allow access from anywhere');
+            console.error('5. Wait 1-2 minutes for changes to take effect');
             console.error('');
         }
 
