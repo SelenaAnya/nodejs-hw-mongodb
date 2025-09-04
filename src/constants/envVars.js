@@ -5,4 +5,4 @@ export const CLOUDINARY_API_SECRET = 'CLOUDINARY_API_SECRET';
 export const SMTP_HOST = 'SMTP_HOST';
 export const SMTP_PORT = 'SMTP_PORT';
 export const SMTP_USER = 'SMTP_USER';
-export const SMTP_PASS = 'SMTP_PASS';
+export const SMTP_PASSWORD = 'SMTP_PASSWORD';

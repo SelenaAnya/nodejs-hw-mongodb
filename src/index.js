@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { setupServer } from './server.js';
-import initMongoConnection from './db/initMongoConnection.js';
+import { initMongoConnection } from './db/initMongoConnection.js'; // ✅ Fixed - import as named export
 
 // Load environment variables
 config();
