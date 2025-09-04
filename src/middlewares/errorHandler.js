@@ -1,15 +1,21 @@
 import { HttpError } from 'http-errors';
 
 export const errorHandler = (err, req, res, next) => {
-    // Log the error for debugging
-    console.error('Error occurred:', {
-        message: err.message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-        url: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-    });
+    // Don't log 404 errors as they're usually bots/crawlers
+    if (err.status !== 404) {
+        console.error('Error occurred:', {
+            message: err.message,
+            status: err.status || 500,
+            url: req.url,
+            method: req.method,
+            ip: req.ip || req.connection.remoteAddress,
+            userAgent: req.get('User-Agent'),
+            timestamp: new Date().toISOString(),
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        });
+    }
 
+    // Handle HTTP errors (from http-errors package)
     if (err instanceof HttpError) {
         res.status(err.status).json({
             status: err.status,
@@ -43,17 +49,68 @@ export const errorHandler = (err, req, res, next) => {
 
     // Handle MongoDB duplicate key error
     if (err.code === 11000) {
+        const field = Object.keys(err.keyPattern || {})[0] || 'field';
         res.status(409).json({
             status: 409,
-            message: 'Duplicate entry found',
+            message: `Duplicate ${field} already exists`,
             data: null,
         });
         return;
     }
 
+    // Handle JWT errors
+    if (err.name === 'JsonWebTokenError') {
+        res.status(401).json({
+            status: 401,
+            message: 'Invalid token',
+            data: null,
+        });
+        return;
+    }
+
+    if (err.name === 'TokenExpiredError') {
+        res.status(401).json({
+            status: 401,
+            message: 'Token expired',
+            data: null,
+        });
+        return;
+    }
+
+    // Handle MongoDB connection errors
+    if (err.name === 'MongooseServerSelectionError') {
+        res.status(503).json({
+            status: 503,
+            message: 'Database connection error',
+            data: null,
+        });
+        return;
+    }
+
+    // Handle CORS errors
+    if (err.message && err.message.includes('CORS')) {
+        res.status(403).json({
+            status: 403,
+            message: 'CORS policy violation',
+            data: null,
+        });
+        return;
+    }
+
+    // Handle multer file upload errors
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        res.status(400).json({
+            status: 400,
+            message: 'File size too large',
+            data: null,
+        });
+        return;
+    }
+
+    // Generic 500 error
     res.status(500).json({
         status: 500,
-        message: 'Something went wrong',
+        message: process.env.NODE_ENV === 'production' ? 'Internal server error' : 'Something went wrong',
         data: process.env.NODE_ENV === 'development' ? err.message : null,
     });
 };
