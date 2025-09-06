@@ -15,7 +15,6 @@ import {
     requestResetEmailController,
     resetPasswordController
 } from '../controllers/auth.js';
-import { requestResetToken } from '../services/auth.js';
 
 const router = Router();
 
@@ -42,29 +41,15 @@ router.post(
 );
 
 router.post(
-    '/send-reset-email',
+    '/request-reset-email',
     validateBody(requestResetEmailSchema),
     ctrlWrapper(requestResetEmailController),
 );
-
 
 router.post(
     '/reset-password',
     validateBody(resetPasswordSchema),
     ctrlWrapper(resetPasswordController),
 );
-
-// Test route for registration
-router.get('/register', (req, res) => {
-    res.json({
-        message: 'Registration endpoint - use POST method',
-        required_fields: ['name', 'email', 'password'],
-        example: {
-            name: 'John Doe',
-            email: 'john@example.com',
-            password: 'password123'
-        }
-    });
-});
 
 export default router;
