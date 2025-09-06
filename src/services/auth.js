@@ -145,20 +145,25 @@ export const logoutUser = async (refreshToken) => {
 };
 
 export const requestResetToken = async (email) => {
-    const user = await UsersCollection.findOne({ email });
+    const user = await UsersCollection.findOne({
+        email: email.toLowerCase()
+    });
+
     if (!user) {
-        throw createHttpError(404, 'User not found');
+        console.log('User not found for password reset:', email);
+        throw createHttpError(404, 'User not found!');
     }
 
+    // Create JWT token with 15 minutes expiration
     const resetToken = jwt.sign(
         {
             sub: user._id,
-            email,
+            email: user.email
         },
         env('JWT_SECRET'),
         {
-            expiresIn: '15m',
-        },
+            expiresIn: '15m'
+        }
     );
 
     await sendEmail({
@@ -168,7 +173,8 @@ export const requestResetToken = async (email) => {
         html: `<p>Click <a href="${resetToken}">here</a> to reset your password!</p>`,
     });
 
-    return resetToken; // повертаємо токен
+    console.log('Reset token created successfully for user:', user._id);
+    return resetToken;
 };
 
 export const resetPassword = async (payload) => {
@@ -197,6 +203,6 @@ export const resetPassword = async (payload) => {
         { password: encryptedPassword },
     );
 
-    // Видаляємо всі сесії користувача для безпеки
+
     await SessionsCollection.deleteMany({ userId: user._id });
 };
