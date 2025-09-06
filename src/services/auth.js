@@ -11,7 +11,7 @@ import {
     THIRTY_DAYS,
 } from '../constants/index.js';
 import { env } from '../utils/env.js';
-import { sendEmail } from '../utils/sendEmail.js';
+import { sendEmail } from '../utils/sendMail.js';
 
 
 

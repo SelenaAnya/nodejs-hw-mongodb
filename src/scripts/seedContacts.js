@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcrypt';
-import { initMongoConnection } from '../db/initMongoConnection.js'; // ✅ Fixed - import as named export
+import { initMongoConnection } from '../db/initMongoConnection.js';
 import { ContactsCollection } from '../db/models/contact.js';
 import { UsersCollection } from '../db/models/user.js';
 
