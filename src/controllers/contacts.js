@@ -110,12 +110,33 @@ export const patchContactController = async (req, res, next) => {
         throw createHttpError(401, 'User not authenticated');
     }
 
-    // Handle photo file
     const photo = req.file;
+    let photoUrl;
+
+    if (photo) {
+        try {
+            console.log('Uploading file to Cloudinary:', photo.path);
+            const uploadResult = await uploadImage(photo.path);
+            photoUrl = uploadResult.url;
+            console.log('File uploaded to Cloudinary:', photoUrl);
+
+            await fs.unlink(photo.path);
+            console.log('Local file deleted:', photo.path);
+        } catch (error) {
+            console.error('Cloudinary upload error:', error);
+
+            try {
+                await fs.unlink(photo.path);
+            } catch (unlinkError) {
+                console.error('Error deleting local file:', unlinkError);
+            }
+            throw createHttpError(500, 'Failed to upload image');
+        }
+    }
 
     const updateData = {
         ...req.body,
-        ...(photo && { photo: photo.path })
+        ...(photoUrl && { photo: photoUrl })
     };
 
     const result = await updateContact(contactId, updateData, req.user._id);
