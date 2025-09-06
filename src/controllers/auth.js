@@ -8,6 +8,7 @@ import {
     requestResetToken,
     resetPassword
 } from '../services/auth.js';
+import { sendResetPasswordEmail } from '../utils/sendEmail.js';
 
 const setupSession = (res, session) => {
     res.cookie('refreshToken', session.refreshToken, {
@@ -82,14 +83,35 @@ export const logoutUserController = async (req, res) => {
 export const requestResetEmailController = async (req, res) => {
     console.log('Password reset request for email:', req.body.email);
 
-    await requestResetToken(req.body.email);
+    const { email } = req.body;
 
-    res.json({
-        status: 200,
-        message: 'Reset password email was successfully sent!',
-        data: {},
-    });
+    try {
+        // Generate reset token
+        const resetToken = await requestResetToken(email);
+
+        // Send reset email
+        await sendResetPasswordEmail(email, resetToken);
+
+        res.json({
+            status: 200,
+            message: 'Reset password email has been successfully sent.',
+            data: {}
+        });
+    } catch (error) {
+        // If it's a user not found error, we still return success
+        // to prevent email enumeration attacks
+        if (error.status === 404) {
+            res.json({
+                status: 200,
+                message: 'Reset password email has been successfully sent.',
+                data: {}
+            });
+            return;
+        }
+        throw error;
+    }
 };
+
 
 export const resetPasswordController = async (req, res) => {
     await resetPassword(req.body);

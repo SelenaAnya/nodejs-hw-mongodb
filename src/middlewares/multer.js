@@ -1,17 +1,9 @@
 import multer from 'multer';
 import createHttpError from 'http-errors';
-import { TEMP_UPLOAD_DIR } from '../constants/index.js';
+import { uploadImageFromBuffer } from '../services/cloudinary.js';
 
-// Configure multer for disk storage
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, TEMP_UPLOAD_DIR);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now();
-        cb(null, `${uniqueSuffix}_${file.originalname}`);
-    },
-});
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
 
 // File filter - allow only images
 const fileFilter = (req, file, cb) => {
@@ -31,13 +23,57 @@ const fileFilter = (req, file, cb) => {
 };
 
 // Configure multer
-export const upload = multer({
+const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
         fileSize: 5 * 1024 * 1024, // 5MB limit
     },
 });
+
+// Middleware for uploading a single file with the 'photo' field
+export const uploadPhoto = upload.single('photo');
+
+// Middleware for processing uploaded file and uploading to Cloudinary
+export const processPhotoUpload = async (req, res, next) => {
+    try {
+        // If no file was uploaded, continue
+        if (!req.file) {
+            return next();
+        }
+
+        console.log('Processing photo upload to Cloudinary...');
+        console.log('File info:', {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
+        });
+
+        // Upload buffer to Cloudinary
+        const result = await uploadImageFromBuffer(req.file.buffer, {
+            folder: 'contacts',
+            public_id: `contact_${Date.now()}`,
+            transformation: [
+                { width: 500, height: 500, crop: 'limit' },
+                { quality: 'auto' },
+                { fetch_format: 'auto' }
+            ]
+        });
+
+        // Replace file path with Cloudinary URL
+        req.file.path = result.url;
+        req.file.cloudinary = {
+            url: result.url,
+            publicId: result.publicId
+        };
+
+        console.log('Photo uploaded to Cloudinary successfully:', result.url);
+        next();
+    } catch (error) {
+        console.error('Error uploading to Cloudinary:', error);
+        next(createHttpError(500, 'Failed to upload photo. Please try again.'));
+    }
+};
 
 // Middleware for handling upload errors
 export const handleUploadError = (error, req, res, next) => {

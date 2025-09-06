@@ -41,15 +41,29 @@ router.post(
 );
 
 router.post(
-    '/request-reset-email',
+    '/send-reset-email',
     validateBody(requestResetEmailSchema),
     ctrlWrapper(requestResetEmailController),
 );
+
 
 router.post(
     '/reset-password',
     validateBody(resetPasswordSchema),
     ctrlWrapper(resetPasswordController),
 );
+
+
+router.get('/register', (req, res) => {
+    res.json({
+        message: 'Registration endpoint - use POST method',
+        required_fields: ['name', 'email', 'password'],
+        example: {
+            name: 'John Doe',
+            email: 'john@example.com',
+            password: 'password123'
+        }
+    });
+});
 
 export default router;
