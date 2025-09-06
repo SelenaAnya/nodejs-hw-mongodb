@@ -11,6 +11,9 @@ import {
     THIRTY_DAYS,
 } from '../constants/index.js';
 import { env } from '../utils/env.js';
+import { sendEmail } from '../utils/sendEmail.js';
+
+
 
 const createSession = () => {
     const accessToken = randomBytes(30).toString('base64');
@@ -116,7 +119,7 @@ export const refreshUsersSession = async ({ refreshToken }) => {
 
     if (isSessionTokenExpired) {
         console.log('Refresh token expired');
-        // Видаляємо застарілу сесію
+
         await SessionsCollection.deleteOne({ _id: session._id });
         throw createHttpError(401, 'Session token expired');
     }
@@ -147,32 +150,52 @@ export const logoutUser = async (refreshToken) => {
 };
 
 export const requestResetToken = async (email) => {
-    console.log('Requesting reset token for email:', email);
-
     const user = await UsersCollection.findOne({
-        email: email.toLowerCase()
+        email: email.toLowerCase().trim()
     });
 
     if (!user) {
-        console.log('User not found for password reset:', email);
         throw createHttpError(404, 'User not found!');
     }
 
-    // Create JWT token with 5 minutes expiration
     const resetToken = jwt.sign(
         {
             sub: user._id,
-            email: user.email
+            email,
         },
         env('JWT_SECRET'),
         {
-            expiresIn: '5m'
-        }
+            expiresIn: '5m',
+        },
     );
 
-    console.log('Reset token created successfully for user:', user._id);
+    try {
+        console.log('=== SMTP CONFIG DEBUG ===');
+        console.log('SMTP_HOST:', env('SMTP_HOST'));
+        console.log('SMTP_PORT:', env('SMTP_PORT'));
+        console.log('SMTP_USER:', env('SMTP_USER'));
+        console.log('SMTP_FROM:', env('SMTP_FROM'));
+        console.log('APP_DOMAIN:', env('APP_DOMAIN'));
+        console.log('=========================');
+
+        const resetUrl = `${env('APP_DOMAIN')}/reset-password?token=${resetToken}`;
+
+        await sendEmail({
+            from: env('SMTP_FROM'),
+            to: email,
+            subject: 'Reset your password',
+            html: `<p>Click <a href="${resetUrl}">here</a> to reset your password!</p>`,
+        });
+
+        console.log('Email sent successfully!');
+    } catch (error) {
+        console.error('Email sending error:', error);
+        throw createHttpError(500, 'Failed to send the email, please try again later.');
+    }
+
     return resetToken;
 };
+
 export const resetPassword = async (payload) => {
     let entries;
 
