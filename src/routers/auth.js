@@ -15,6 +15,7 @@ import {
     requestResetEmailController,
     resetPasswordController
 } from '../controllers/auth.js';
+import { requestResetToken } from '../services/auth.js';
 
 const router = Router();
 
@@ -46,7 +47,7 @@ router.post(
     ctrlWrapper(requestResetEmailController),
 );
 
-// Оновлений роут згідно з інструкцією
+
 router.post(
     '/reset-password',
     validateBody(resetPasswordSchema),
