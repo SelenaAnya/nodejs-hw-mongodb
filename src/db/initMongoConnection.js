@@ -18,10 +18,9 @@ export const initMongoConnection = async () => {
 
         await mongoose.connect(mongoUrl, {
             // Connection options for better reliability
-            serverSelectionTimeoutMS: 15000, // 15 seconds (increased)
-            socketTimeoutMS: 45000, // 45 seconds
-            connectTimeoutMS: 15000, // 15 seconds
-            maxPoolSize: 10, // Maintain up to 10 socket connections
+            serverSelectionTimeoutMS: 15000, socketTimeoutMS: 45000, // 45 seconds
+            connectTimeoutMS: 15000,
+            maxPoolSize: 10,
             retryWrites: true,
             w: 'majority'
         });
