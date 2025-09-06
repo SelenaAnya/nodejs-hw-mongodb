@@ -5,12 +5,9 @@ import jwt from 'jsonwebtoken';
 
 import { UsersCollection } from '../db/models/user.js';
 import { SessionsCollection } from '../db/models/session.js';
-
-import {
-    FIFTEEN_MINUTES,
-    THIRTY_DAYS,
-} from '../constants/index.js';
+import { FIFTEEN_MINUTES, THIRTY_DAYS, SMTP } from '../constants/index.js';
 import { env } from '../utils/env.js';
+import { sendEmail } from '../utils/sendMail.js';
 
 const createSession = () => {
     const accessToken = randomBytes(30).toString('base64');
@@ -116,7 +113,6 @@ export const refreshUsersSession = async ({ refreshToken }) => {
 
     if (isSessionTokenExpired) {
         console.log('Refresh token expired');
-        // Видаляємо застарілу сесію
         await SessionsCollection.deleteOne({ _id: session._id });
         throw createHttpError(401, 'Session token expired');
     }
@@ -139,7 +135,7 @@ export const logoutUser = async (refreshToken) => {
     console.log('Logging out user');
 
     if (!refreshToken) {
-        return; // We don't quit, we just go back
+        return;
     }
 
     const result = await SessionsCollection.deleteOne({ refreshToken });
@@ -147,34 +143,32 @@ export const logoutUser = async (refreshToken) => {
 };
 
 export const requestResetToken = async (email) => {
-    console.log('Requesting reset token for email:', email);
-
-    const user = await UsersCollection.findOne({
-        email: email.toLowerCase()
-    });
-
+    const user = await UsersCollection.findOne({ email });
     if (!user) {
-        console.log('User not found for password reset:', email);
-        throw createHttpError(404, 'User not found!');
+        throw createHttpError(404, 'User not found');
     }
 
-    // Create JWT token with 5 minutes expiration
     const resetToken = jwt.sign(
         {
             sub: user._id,
-            email: user.email
+            email,
         },
         env('JWT_SECRET'),
         {
-            expiresIn: '5m'
-        }
+            expiresIn: '15m',
+        },
     );
 
-    console.log('Reset token created successfully for user:', user._id);
+    await sendEmail({
+        from: env(SMTP.SMTP_FROM),
+        to: email,
+        subject: 'Reset your password',
+        html: `<p>Click <a href="${resetToken}">here</a> to reset your password!</p>`,
+    });
+
     return resetToken;
 };
 
-// Updated method according to the instructions
 export const resetPassword = async (payload) => {
     let entries;
 
@@ -201,8 +195,6 @@ export const resetPassword = async (payload) => {
         { password: encryptedPassword },
     );
 
-    // Additionally, delete all user sessions (for security)
+    // Delete all user sessions for security
     await SessionsCollection.deleteMany({ userId: user._id });
-
-    console.log('Password reset successfully for user:', user._id);
 };
