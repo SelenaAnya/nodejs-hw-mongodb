@@ -69,10 +69,26 @@ export const createContactController = async (req, res) => {
         throw createHttpError(401, 'User not authenticated');
     }
 
-    // Add the URL of the photo if the file was uploaded
+    // Handle photo file
+    const photo = req.file;
+
+    /*
+    В photo лежить об'єкт файлу:
+    {
+      fieldname: 'photo',
+      originalname: 'download.jpeg',
+      encoding: '7bit',
+      mimetype: 'image/jpeg',
+      destination: '/path/to/temp',
+      filename: '1710709919677_download.jpeg',
+      path: '/path/to/temp/1710709919677_download.jpeg',
+      size: 7
+    }
+    */
+
     const contactData = {
         ...req.body,
-        photo: req.file ? req.file.path : undefined
+        photo: photo ? photo.path : undefined
     };
 
     const contact = await createContact(contactData, req.user._id);
@@ -94,10 +110,12 @@ export const patchContactController = async (req, res, next) => {
         throw createHttpError(401, 'User not authenticated');
     }
 
-    // Add the photo URL to the update data if the file was uploaded
+    // Handle photo file
+    const photo = req.file;
+
     const updateData = {
         ...req.body,
-        ...(req.file && { photo: req.file.path })
+        ...(photo && { photo: photo.path })
     };
 
     const result = await updateContact(contactId, updateData, req.user._id);

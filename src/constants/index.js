@@ -1,8 +1,14 @@
+import path from 'path';
+
 export const SORT_ORDER = {
     ASC: 'asc',
     DESC: 'desc',
 };
 
-export const FIFTEEN_MINUTES = 15 * 60 * 1000; // 15 minutes in milliseconds
-export const ONE_DAY = 24 * 60 * 60 * 1000; // 1 day in milliseconds
-export const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+export const FIFTEEN_MINUTES = 15 * 60 * 1000;
+export const ONE_DAY = 24 * 60 * 60 * 1000;
+export const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+// Upload directories
+export const TEMP_UPLOAD_DIR = path.join(process.cwd(), 'temp');
+export const UPLOAD_DIR = path.join(process.cwd(), 'uploads');

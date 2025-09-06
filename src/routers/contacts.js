@@ -9,7 +9,7 @@ import {
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { isValidId } from '../middlewares/isValidId.js';
-import { uploadPhoto, processPhotoUpload, handleUploadError } from '../middlewares/multer.js';
+import { upload, handleUploadError } from '../middlewares/multer.js';
 import {
     createContactSchema,
     updateContactSchema,
@@ -29,23 +29,21 @@ router.get(
     ctrlWrapper(getContactByIdController),
 );
 
-// Route to create a contact with photo upload to Cloudinary
+// Route to create a contact with photo upload
 router.post(
     '/',
-    uploadPhoto,
+    upload.single('photo'),
     handleUploadError,
-    processPhotoUpload,
     validateBody(createContactSchema),
     ctrlWrapper(createContactController),
 );
 
-// Route to update a contact with photo upload to Cloudinary
+// Route to update a contact with photo upload
 router.patch(
     '/:contactId',
     isValidId,
-    uploadPhoto,
+    upload.single('photo'),
     handleUploadError,
-    processPhotoUpload,
     validateBody(updateContactSchema),
     ctrlWrapper(patchContactController),
 );

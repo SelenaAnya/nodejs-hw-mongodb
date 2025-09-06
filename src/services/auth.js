@@ -116,7 +116,7 @@ export const refreshUsersSession = async ({ refreshToken }) => {
 
     if (isSessionTokenExpired) {
         console.log('Refresh token expired');
-        // Видаляємо застарілу сесію
+        // Delete an outdated session
         await SessionsCollection.deleteOne({ _id: session._id });
         throw createHttpError(401, 'Session token expired');
     }
@@ -139,7 +139,7 @@ export const logoutUser = async (refreshToken) => {
     console.log('Logging out user');
 
     if (!refreshToken) {
-        return; // We don't quit, we just go back
+        return;
     }
 
     const result = await SessionsCollection.deleteOne({ refreshToken });
@@ -174,34 +174,34 @@ export const requestResetToken = async (email) => {
     return resetToken;
 };
 
+// Updated method according to the instructions
 export const resetPassword = async (payload) => {
-    const { token, password } = payload;
+    let entries;
 
-    console.log('Attempting to reset password with token');
-
-    let decoded;
     try {
-        decoded = jwt.verify(token, env('JWT_SECRET'));
-    } catch (error) {
-        console.log('Invalid or expired token:', error.message);
-        throw createHttpError(401, 'Token is expired or invalid.');
+        entries = jwt.verify(payload.token, env('JWT_SECRET'));
+    } catch (err) {
+        if (err instanceof Error) throw createHttpError(401, err.message);
+        throw err;
     }
 
-    const user = await UsersCollection.findById(decoded.sub);
-    if (!user) {
-        console.log('User not found for decoded token');
-        throw createHttpError(404, 'User not found!');
-    }
-
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Update user password
-    await UsersCollection.findByIdAndUpdate(user._id, {
-        password: hashedPassword,
+    const user = await UsersCollection.findOne({
+        email: entries.email,
+        _id: entries.sub,
     });
 
-    // Delete all sessions for this user
+    if (!user) {
+        throw createHttpError(404, 'User not found');
+    }
+
+    const encryptedPassword = await bcrypt.hash(payload.password, 10);
+
+    await UsersCollection.updateOne(
+        { _id: user._id },
+        { password: encryptedPassword },
+    );
+
+    // Additionally, delete all user sessions (for security)
     await SessionsCollection.deleteMany({ userId: user._id });
 
     console.log('Password reset successfully for user:', user._id);

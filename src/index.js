@@ -1,6 +1,8 @@
 import { config } from 'dotenv';
 import { setupServer } from './server.js';
-import { initMongoConnection } from './db/initMongoConnection.js'; // ✅ Fixed - import as named export
+import { initMongoConnection } from './db/initMongoConnection.js';
+import { createDirIfNotExists } from './utils/createDirIfNotExists.js';
+import { TEMP_UPLOAD_DIR, UPLOAD_DIR } from './constants/index.js';
 
 // Load environment variables
 config();
@@ -12,6 +14,11 @@ const bootstrap = async () => {
         // Initialize MongoDB connection
         await initMongoConnection();
         console.log('Database connection established');
+
+        // Create upload directories
+        await createDirIfNotExists(TEMP_UPLOAD_DIR);
+        await createDirIfNotExists(UPLOAD_DIR);
+        console.log('Upload directories created');
 
         // Setup and start server
         setupServer();

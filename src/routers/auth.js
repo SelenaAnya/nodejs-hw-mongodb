@@ -46,13 +46,14 @@ router.post(
     ctrlWrapper(requestResetEmailController),
 );
 
+// Оновлений роут згідно з інструкцією
 router.post(
-    '/reset-pwd',
+    '/reset-password',
     validateBody(resetPasswordSchema),
     ctrlWrapper(resetPasswordController),
 );
 
-// Add this to src/routers/auth.js for testing
+// Test route for registration
 router.get('/register', (req, res) => {
     res.json({
         message: 'Registration endpoint - use POST method',
