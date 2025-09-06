@@ -7,7 +7,7 @@ import { UsersCollection } from '../db/models/user.js';
 import { SessionsCollection } from '../db/models/session.js';
 import { FIFTEEN_MINUTES, THIRTY_DAYS, SMTP } from '../constants/index.js';
 import { env } from '../utils/env.js';
-import { sendEmail } from '../utils/sendEmail.js';
+import { sendEmail } from '../utils/sendMail.js';
 
 
 const createSession = () => {
