@@ -55,3 +55,28 @@ router.delete(
 );
 
 export default router;
+
+router.post('/test-upload',
+    upload.single('photo'),
+    handleUploadError,
+    (req, res) => {
+        console.log('=== TEST UPLOAD DEBUG ===');
+        console.log('Body:', req.body);
+        console.log('File:', req.file);
+        console.log('========================');
+
+        res.json({
+            status: 200,
+            message: 'Test upload successful',
+            data: {
+                body: req.body,
+                file: req.file,
+                hasFile: !!req.file,
+                filename: req.file?.filename,
+                path: req.file?.path,
+                mimetype: req.file?.mimetype,
+                size: req.file?.size
+            }
+        });
+    }
+);

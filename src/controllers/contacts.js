@@ -1,4 +1,5 @@
 import createHttpError from 'http-errors';
+import fs from 'fs/promises'; // ДОДАНО: імпорт fs
 import {
     getAllContacts,
     getContactById,
@@ -6,6 +7,7 @@ import {
     updateContact,
     deleteContact,
 } from '../services/contacts.js';
+import { uploadImage } from '../services/cloudinary.js'; // ДОДАНО: імпорт uploadImage
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
@@ -61,37 +63,52 @@ export const getContactByIdController = async (req, res, next) => {
 };
 
 export const createContactController = async (req, res) => {
-    console.log('User in createContactController:', req.user);
+    console.log('=== CREATE CONTACT DEBUG ===');
+    console.log('User:', req.user);
     console.log('Request body:', req.body);
     console.log('Uploaded file:', req.file);
+    console.log('============================');
 
     if (!req.user || !req.user._id) {
         throw createHttpError(401, 'User not authenticated');
     }
 
-    // Handle photo file
-    const photo = req.file;
+    let photoUrl;
 
-    /*
-    В photo лежить об'єкт файлу:
-    {
-      fieldname: 'photo',
-      originalname: 'download.jpeg',
-      encoding: '7bit',
-      mimetype: 'image/jpeg',
-      destination: '/path/to/temp',
-      filename: '1710709919677_download.jpeg',
-      path: '/path/to/temp/1710709919677_download.jpeg',
-      size: 7
+    // Handle photo upload
+    if (req.file) {
+        try {
+            console.log('Uploading file to Cloudinary:', req.file.path);
+            const uploadResult = await uploadImage(req.file.path);
+            photoUrl = uploadResult.url;
+            console.log('File uploaded to Cloudinary:', photoUrl);
+
+            // Clean up temporary file
+            await fs.unlink(req.file.path);
+            console.log('Local file deleted:', req.file.path);
+        } catch (error) {
+            console.error('Cloudinary upload error:', error);
+
+            // Clean up temp file on error
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                console.error('Error deleting local file:', unlinkError);
+            }
+            throw createHttpError(500, 'Failed to upload image');
+        }
     }
-    */
 
     const contactData = {
         ...req.body,
-        photo: photo ? photo.path : undefined
+        ...(photoUrl && { photo: photoUrl })
     };
 
+    console.log('Final contact data:', contactData);
+
     const contact = await createContact(contactData, req.user._id);
+
+    console.log('Created contact:', contact);
 
     res.status(201).json({
         status: 201,
@@ -101,8 +118,12 @@ export const createContactController = async (req, res) => {
 };
 
 export const patchContactController = async (req, res, next) => {
-    console.log('User in patchContactController:', req.user);
+    console.log('=== PATCH CONTACT DEBUG ===');
+    console.log('User:', req.user);
+    console.log('Contact ID:', req.params.contactId);
+    console.log('Request body:', req.body);
     console.log('Uploaded file:', req.file);
+    console.log('===========================');
 
     const { contactId } = req.params;
 
@@ -110,23 +131,25 @@ export const patchContactController = async (req, res, next) => {
         throw createHttpError(401, 'User not authenticated');
     }
 
-    const photo = req.file;
     let photoUrl;
 
-    if (photo) {
+    // Handle photo upload
+    if (req.file) {
         try {
-            console.log('Uploading file to Cloudinary:', photo.path);
-            const uploadResult = await uploadImage(photo.path);
+            console.log('Uploading file to Cloudinary:', req.file.path);
+            const uploadResult = await uploadImage(req.file.path);
             photoUrl = uploadResult.url;
             console.log('File uploaded to Cloudinary:', photoUrl);
 
-            await fs.unlink(photo.path);
-            console.log('Local file deleted:', photo.path);
+            // Clean up temporary file
+            await fs.unlink(req.file.path);
+            console.log('Local file deleted:', req.file.path);
         } catch (error) {
             console.error('Cloudinary upload error:', error);
 
+            // Clean up temp file on error
             try {
-                await fs.unlink(photo.path);
+                await fs.unlink(req.file.path);
             } catch (unlinkError) {
                 console.error('Error deleting local file:', unlinkError);
             }
@@ -139,12 +162,16 @@ export const patchContactController = async (req, res, next) => {
         ...(photoUrl && { photo: photoUrl })
     };
 
+    console.log('Update data:', updateData);
+
     const result = await updateContact(contactId, updateData, req.user._id);
 
     if (!result) {
         next(createHttpError(404, 'Contact not found'));
         return;
     }
+
+    console.log('Updated contact:', result.contact);
 
     res.json({
         status: 200,
