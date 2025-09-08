@@ -3,17 +3,47 @@ import { setupServer } from './server.js';
 import { initMongoConnection } from './db/initMongoConnection.js';
 import { createDirIfNotExists } from './utils/createDirIfNotExists.js';
 import { TEMP_UPLOAD_DIR, UPLOAD_DIR } from './constants/index.js';
+import { verifyEmailConnection } from './utils/sendMail.js';
 
 // Load environment variables
 config();
+
+// const bootstrap = async () => {
+//     try {
+//         console.log('Starting application bootstrap...');
+
+//         // Initialize MongoDB connection
+//         await initMongoConnection();
+//         console.log('Database connection established');
+
+//         // Create upload directories
+//         await createDirIfNotExists(TEMP_UPLOAD_DIR);
+//         await createDirIfNotExists(UPLOAD_DIR);
+//         console.log('Upload directories created');
+
+//         // Setup and start server
+//         setupServer();
+//         console.log('Server setup completed');
+
+//     } catch (error) {
+//         console.error('Failed to start application:', error);
+//         process.exit(1);
+//     }
+// };
+
 
 const bootstrap = async () => {
     try {
         console.log('Starting application bootstrap...');
 
-        // Initialize MongoDB connection
         await initMongoConnection();
         console.log('Database connection established');
+
+        // Перевірити SMTP підключення
+        const emailOk = await verifyEmailConnection();
+        if (!emailOk) {
+            console.warn(' Email service unavailable - password reset may not work');
+        }
 
         // Create upload directories
         await createDirIfNotExists(TEMP_UPLOAD_DIR);
