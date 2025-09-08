@@ -41,7 +41,7 @@ export const sendEmail = async (options) => {
     } catch (error) {
         console.error('Email sending failed:', error);
 
-        // Detailed log of the error object
+        // error log
         if (error.code) {
             console.error('Error code:', error.code);
         }
