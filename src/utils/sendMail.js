@@ -23,7 +23,10 @@ const transport = nodemailer.createTransport({
         user: env(SMTP_USER),
         pass: env(SMTP_PASSWORD),
     },
+    tls: { rejectUnauthorized: false }
 });
+
+
 
 
 export const verifyEmailConnection = async () => {
@@ -40,6 +43,7 @@ export const verifyEmailConnection = async () => {
         });
         return false;
     }
+
 };
 
 export const sendEmail = async (options) => {
