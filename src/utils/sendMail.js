@@ -17,7 +17,7 @@ console.log('Creating email transporter with config:', {
 
 const transport = nodemailer.createTransport({
     host: env(SMTP_HOST),
-    port: env(SMTP_PORT),
+    port: Number(env(SMTP_PORT)),
     secure: env('SMTP_SECURE') === 'true',
     auth: {
         user: env(SMTP_USER),
