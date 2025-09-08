@@ -1,21 +1,31 @@
 import nodemailer from 'nodemailer';
 import { env } from './env.js';
 
-const transporter = nodemailer.createTransporter({
+console.log('Creating email transporter with config:', {
+    host: env('SMTP_HOST'),
+    port: env('SMTP_PORT'),
+    secure: env('SMTP_SECURE'),
+    user: env('SMTP_USER'),
+    from: env('SMTP_FROM')
+});
+
+const transporter = nodemailer.createTransport({
     host: env('SMTP_HOST'),
     port: Number(env('SMTP_PORT')),
-    secure: env('SMTP_SECURE') === 'true',
+    secure: env('SMTP_SECURE') === 'true', // true для порту 465, false для інших портів
     auth: {
         user: env('SMTP_USER'),
         pass: env('SMTP_PASSWORD'),
     },
     tls: {
-
+        // Не перевіряти сертифікат для ukr.net (якщо потрібно)
         rejectUnauthorized: false
-    }
+    },
+    debug: true, // увімкнути debug режим
+    logger: true // увімкнути логування
 });
 
-// Check connection to SMTP server at startup
+// Перевірити підключення до SMTP сервера при запуску
 export const verifyEmailConnection = async () => {
     try {
         await transporter.verify();
@@ -41,7 +51,7 @@ export const sendEmail = async (options) => {
     } catch (error) {
         console.error('Email sending failed:', error);
 
-        // error log
+        // Детальний лог помилки
         if (error.code) {
             console.error('Error code:', error.code);
         }
