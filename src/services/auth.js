@@ -149,6 +149,7 @@ export const logoutUser = async (refreshToken) => {
     console.log('Sessions deleted:', result.deletedCount);
 };
 
+
 export const requestResetToken = async (email) => {
     const user = await UsersCollection.findOne({
         email: email.toLowerCase().trim()
@@ -173,24 +174,69 @@ export const requestResetToken = async (email) => {
         console.log('=== SMTP CONFIG DEBUG ===');
         console.log('SMTP_HOST:', env('SMTP_HOST'));
         console.log('SMTP_PORT:', env('SMTP_PORT'));
+        console.log('SMTP_SECURE:', env('SMTP_SECURE'));
         console.log('SMTP_USER:', env('SMTP_USER'));
         console.log('SMTP_FROM:', env('SMTP_FROM'));
         console.log('APP_DOMAIN:', env('APP_DOMAIN'));
+        console.log('Token generated:', !!resetToken);
         console.log('=========================');
 
         const resetUrl = `${env('APP_DOMAIN')}/reset-password?token=${resetToken}`;
 
-        await sendEmail({
+        // Check connection before sending email
+        const { verifyEmailConnection } = await import('../utils/sendMail.js');
+        const connectionOk = await verifyEmailConnection();
+
+        if (!connectionOk) {
+            throw new Error('SMTP connection failed');
+        }
+
+        const emailOptions = {
             from: env('SMTP_FROM'),
             to: email,
             subject: 'Reset your password',
-            html: `<p>Click <a href="${resetUrl}">here</a> to reset your password!</p>`,
+            html: `
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2>Password Reset Request</h2>
+                    <p>You have requested to reset your password. Click the link below to reset it:</p>
+                    <p style="margin: 20px 0;">
+                        <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            Reset Password
+                        </a>
+                    </p>
+                    <p>This link will expire in 5 minutes.</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                </div>
+            `,
+        };
+
+        console.log('Sending email with options:', JSON.stringify(emailOptions, null, 2));
+
+        const { sendEmail } = await import('../utils/sendMail.js');
+        const result = await sendEmail(emailOptions);
+
+        console.log('Email sent successfully!', result.messageId);
+    } catch (error) {
+        console.error('Email sending error details:', {
+            message: error.message,
+            code: error.code,
+            response: error.response,
+            responseCode: error.responseCode,
+            stack: error.stack
         });
 
-        console.log('Email sent successfully!');
-    } catch (error) {
-        console.error('Email sending error:', error);
-        throw createHttpError(500, 'Failed to send the email, please try again later.');
+        // Custom error messages
+        let errorMessage = 'Failed to send the email, please try again later.';
+
+        if (error.code === 'EAUTH') {
+            errorMessage = 'Email authentication failed. Please check SMTP credentials.';
+        } else if (error.code === 'ECONNECTION') {
+            errorMessage = 'Cannot connect to email server. Please try again later.';
+        } else if (error.response && error.response.includes('Invalid login')) {
+            errorMessage = 'Email server rejected login credentials.';
+        }
+
+        throw createHttpError(500, errorMessage);
     }
 
     return resetToken;
