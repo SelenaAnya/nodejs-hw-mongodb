@@ -15,26 +15,20 @@ console.log('Creating email transporter with config:', {
     from: env(SMTP_FROM)
 });
 
-const transporter = nodemailer.createTransporter({
+const transport = nodemailer.createTransport({
     host: env(SMTP_HOST),
-    port: Number(env(SMTP_PORT)),
+    port: env(SMTP_PORT),
     secure: env('SMTP_SECURE') === 'true',
     auth: {
         user: env(SMTP_USER),
         pass: env(SMTP_PASSWORD),
     },
-    tls: {
-
-        rejectUnauthorized: false
-    },
-    debug: true,
-    logger: true
 });
 
 
 export const verifyEmailConnection = async () => {
     try {
-        await transporter.verify();
+        await transport.verify();
         console.log(' SMTP connection verified successfully');
         return true;
     } catch (error) {
@@ -62,7 +56,7 @@ export const sendEmail = async (options) => {
             from: options.from || env(SMTP_FROM)
         };
 
-        const result = await transporter.sendMail(emailOptions);
+        const result = await transport.sendMail(emailOptions);
         console.log(' Email sent successfully:', result.messageId);
         return result;
     } catch (error) {
