@@ -1,42 +1,79 @@
 import nodemailer from 'nodemailer';
-import createHttpError from 'http-errors';
 import { env } from './env.js';
-import { ENV_VARS } from '../constants/envVars.js';
+import {
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_USER,
+    SMTP_PASSWORD,
+    SMTP_FROM
+} from '../constants/envVars.js';
 
-const transporter = nodemailer.createTransport({
-    host: env(ENV_VARS.SMTP_HOST),
-    port: Number(env(ENV_VARS.SMTP_PORT)),
-    secure: 'true',
+console.log('Creating email transporter with config:', {
+    host: env(SMTP_HOST),
+    port: env(SMTP_PORT),
+    user: env(SMTP_USER),
+    from: env(SMTP_FROM)
+});
+
+const transporter = nodemailer.createTransporter({
+    host: env(SMTP_HOST),
+    port: Number(env(SMTP_PORT)),
+    secure: env('SMTP_SECURE') === 'true',
     auth: {
-        user: env(ENV_VARS.SMTP_USER),
-        pass: env(ENV_VARS.SMTP_PASSWORD)
-    }
-})
+        user: env(SMTP_USER),
+        pass: env(SMTP_PASSWORD),
+    },
+    tls: {
 
-await transporter.verify();
+        rejectUnauthorized: false
+    },
+    debug: true,
+    logger: true
+});
 
 
-export const sendEmail = async ({ to, subject, from, text, html }) => {
+export const verifyEmailConnection = async () => {
     try {
-        await transporter.sendMail({
-            to,
-            subject,
-            from,
-            text,
-            html,
-            from: env(ENV_VARS.SMTP_FROM)
+        await transporter.verify();
+        console.log(' SMTP connection verified successfully');
+        return true;
+    } catch (error) {
+        console.error(' SMTP connection error:', {
+            message: error.message,
+            code: error.code,
+            response: error.response,
+            responseCode: error.responseCode
+        });
+        return false;
+    }
+};
+
+export const sendEmail = async (options) => {
+    try {
+        console.log('Attempting to send email:', {
+            from: options.from,
+            to: options.to,
+            subject: options.subject
         });
 
+        // Add from if it is not present
+        const emailOptions = {
+            ...options,
+            from: options.from || env(SMTP_FROM)
+        };
+
+        const result = await transporter.sendMail(emailOptions);
+        console.log(' Email sent successfully:', result.messageId);
+        return result;
     } catch (error) {
-        console.error('Error sending email:', error);
-        throw createHttpError(500, 'Failed to send email');
+        console.error(' Email sending failed:', {
+            message: error.message,
+            code: error.code,
+            response: error.response,
+            responseCode: error.responseCode,
+            command: error.command
+        });
+
+        throw error;
     }
-}
-//         const result = await transporter.sendMail(options);
-//         console.log('Email sent successfully:', result.messageId);
-//         return result;
-//     } catch (error) {
-//         console.error('Email sending failed:', error);
-//         throw createHttpError(500, 'Failed to send email');
-//     }
-// };
+};
