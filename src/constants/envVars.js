@@ -17,3 +17,4 @@ export const MONGODB_DB = 'MONGODB_DB';
 
 export const PORT = 'PORT';
 export const NODE_ENV = 'NODE_ENV';
+export const SMTP_FROM = 'SMTP_FROM';

@@ -1,67 +1,42 @@
 import nodemailer from 'nodemailer';
+import createHttpError from 'http-errors';
 import { env } from './env.js';
-
-console.log('Creating email transporter with config:', {
-    host: env('SMTP_HOST'),
-    port: env('SMTP_PORT'),
-    secure: env('SMTP_SECURE'),
-    user: env('SMTP_USER'),
-    from: env('SMTP_FROM')
-});
+import { ENV_VARS } from '../constants/envVars.js';
 
 const transporter = nodemailer.createTransport({
-    host: env('SMTP_HOST'),
-    port: Number(env('SMTP_PORT')),
-    secure: env('SMTP_SECURE') === 'true', // true для порту 465, false для інших портів
+    host: env(ENV_VARS.SMTP_HOST),
+    port: Number(env(ENV_VARS.SMTP_PORT)),
+    secure: 'true',
     auth: {
-        user: env('SMTP_USER'),
-        pass: env('SMTP_PASSWORD'),
-    },
-    tls: {
-        // Не перевіряти сертифікат для ukr.net (якщо потрібно)
-        rejectUnauthorized: false
-    },
-    debug: true, // увімкнути debug режим
-    logger: true // увімкнути логування
-});
-
-// Перевірити підключення до SMTP сервера при запуску
-export const verifyEmailConnection = async () => {
-    try {
-        await transporter.verify();
-        console.log('SMTP connection verified successfully');
-        return true;
-    } catch (error) {
-        console.error('SMTP connection error:', error);
-        return false;
+        user: env(ENV_VARS.SMTP_USER),
+        pass: env(ENV_VARS.SMTP_PASSWORD)
     }
-};
+})
 
-export const sendEmail = async (options) => {
+await transporter.verify();
+
+
+export const sendEmail = async ({ to, subject, from, text, html }) => {
     try {
-        console.log('Attempting to send email:', {
-            from: options.from,
-            to: options.to,
-            subject: options.subject
+        await transporter.sendMail({
+            to,
+            subject,
+            from,
+            text,
+            html,
+            from: env(ENV_VARS.SMTP_FROM)
         });
 
-        const result = await transporter.sendMail(options);
-        console.log('Email sent successfully:', result.messageId);
-        return result;
     } catch (error) {
-        console.error('Email sending failed:', error);
-
-        // Детальний лог помилки
-        if (error.code) {
-            console.error('Error code:', error.code);
-        }
-        if (error.response) {
-            console.error('SMTP response:', error.response);
-        }
-        if (error.responseCode) {
-            console.error('Response code:', error.responseCode);
-        }
-
-        throw error;
+        console.error('Error sending email:', error);
+        throw createHttpError(500, 'Failed to send email');
     }
-};
+}
+//         const result = await transporter.sendMail(options);
+//         console.log('Email sent successfully:', result.messageId);
+//         return result;
+//     } catch (error) {
+//         console.error('Email sending failed:', error);
+//         throw createHttpError(500, 'Failed to send email');
+//     }
+// };
