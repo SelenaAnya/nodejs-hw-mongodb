@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "seed": "node src/scripts/seedContacts.js"
+    "seed": "node src/scripts/seedContacts.js",
+    "build": "npm run build-docs",
+    "build-docs": "redocly bundle docs/openapi.yaml --ext json -o docs/swagger.json",
+    "preview-docs": "redocly preview-docs"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -26,9 +29,11 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^6.10.1",
     "pino-http": "^8.5.1",
-    "pino-pretty": "^10.2.3"
+    "pino-pretty": "^10.2.3",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@redocly/cli": "^2.0.8",
     "nodemon": "^3.0.1"
   },
   "keywords": [
