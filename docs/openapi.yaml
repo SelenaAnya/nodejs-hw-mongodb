@@ -1,19 +1,70 @@
 openapi: 3.1.0
 info:
   version: 1.0.0
-  title: <назва вашого додатку>
+  title: Contacts Management API
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  description:
-    <опис вашого додатку>
+  description: |
+    This is a comprehensive API for managing personal contacts with authentication.
+
+    ## Features
+    - User registration and authentication
+    - Contact management (CRUD operations)
+    - File upload for contact photos
+    - Filtering and sorting
+    - Password reset functionality
+
+    ## Authentication
+    Most endpoints require authentication using Bearer tokens.
+    1. Register a new user or login with existing credentials
+    2. Use the returned access token in the Authorization header: `Bearer <token>`
+
 tags:
-  # теги, що ви будете використовувати
+  - name: Contacts
+    description: Operations for managing contacts
+  - name: Auth
+    description: Authentication operations
 servers:
   - url: http://localhost:3000
-  - url: #посилання на задеплоєний сайт
+    description: Development server
+  - url: https://your-deployed-app.herokuapp.com
+    description: Production server
 paths:
-  # тут будуть посилання на ендпоінти
+  # Auth endpoints
+  /auth/register:
+    post:
+      $ref: ../swagger/paths/auth/register/post.yaml
+  /auth/login:
+    post:
+      $ref: ../swagger/paths/auth/login/post.yaml
+  /auth/refresh:
+    post:
+      $ref: ../swagger/paths/auth/refresh/post.yaml
+  /auth/logout:
+    post:
+      $ref: ../swagger/paths/auth/logout/post.yaml
+  /auth/send-reset-email:
+    post:
+      $ref: ../swagger/paths/auth/send-reset-email/post.yaml
+  /auth/reset-pwd:
+    post:
+      $ref: ../swagger/paths/auth/reset-pwd/post.yaml
+
+  # Contact endpoints
+  /contacts:
+    get:
+      $ref: ../swagger/paths/contacts/get.yaml
+    post:
+      $ref: ../swagger/paths/contacts/post.yaml
+  /contacts/{contactId}:
+    get:
+      $ref: ../swagger/paths/contacts/{contactId}/get.yaml
+    patch:
+      $ref: ../swagger/paths/contacts/{contactId}/patch.yaml
+    delete:
+      $ref: ../swagger/paths/contacts/{contactId}/delete.yaml
+
 components:
   securitySchemes:
     bearerAuth:
