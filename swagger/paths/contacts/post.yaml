@@ -1,0 +1,77 @@
+tags:
+  - Contacts
+summary: Create a new contact
+operationId: createContact
+description: "Create a new contact. Supports multipart/form-data for photo upload"
+security:
+  - bearerAuth: []
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        $ref: "../../components/schemas/contactCreate.yaml"
+      example:
+        name: "John Doe"
+        phoneNumber: "+380501234567"
+        email: "john.doe@example.com"
+        contactType: "personal"
+        isFavourite: false
+    multipart/form-data:
+      schema:
+        type: object
+        required:
+          - name
+          - phoneNumber
+        properties:
+          name:
+            type: string
+            minLength: 2
+            maxLength: 50
+            example: "John Doe"
+          phoneNumber:
+            type: string
+            minLength: 10
+            maxLength: 20
+            pattern: '^[\+]?[\d\s\-\(\)]+$'
+            example: "+380501234567"
+          email:
+            type: string
+            format: email
+            maxLength: 50
+            example: "john.doe@example.com"
+          contactType:
+            type: string
+            enum: ["work", "home", "personal"]
+            default: "personal"
+          isFavourite:
+            type: boolean
+            default: false
+          photo:
+            type: string
+            format: binary
+            description: Contact photo (image file, max 5MB)
+responses:
+  "201":
+    description: Contact created successfully
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 201
+            message:
+              type: string
+              example: Successfully created a contact!
+            data:
+              $ref: "../../components/schemas/contact.yaml"
+  "400":
+    $ref: "../../components/responses/400.yaml"
+  "401":
+    $ref: "../../components/responses/401.yaml"

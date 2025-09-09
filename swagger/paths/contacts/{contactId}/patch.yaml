@@ -1,0 +1,81 @@
+tags:
+  - Contacts
+summary: Update contact by ID
+operationId: updateContact
+description: "Update an existing contact. Supports partial updates and photo upload"
+security:
+  - bearerAuth: []
+parameters:
+  - in: path
+    name: contactId
+    required: true
+    schema:
+      type: string
+      pattern: "^[0-9a-fA-F]{24}$"
+      example: "65ca67e7ae7f10c88b598384"
+    description: MongoDB ObjectId of the contact
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        $ref: "../../components/schemas/contactUpdate.yaml"
+      example:
+        name: "John Smith"
+        isFavourite: true
+    multipart/form-data:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+            minLength: 2
+            maxLength: 50
+            example: "John Smith"
+          phoneNumber:
+            type: string
+            minLength: 10
+            maxLength: 20
+            pattern: '^[\+]?[\d\s\-\(\)]+$'
+            example: "+380501234567"
+          email:
+            type: string
+            format: email
+            maxLength: 50
+            example: "john.smith@example.com"
+          contactType:
+            type: string
+            enum: ["work", "home", "personal"]
+          isFavourite:
+            type: boolean
+          photo:
+            type: string
+            format: binary
+            description: Contact photo (image file, max 5MB)
+        minProperties: 1
+responses:
+  "200":
+    description: Contact updated successfully
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully patched a contact!
+            data:
+              $ref: "../../../components/schemas/contact.yaml"
+  "400":
+    $ref: "../../../components/responses/400.yaml"
+  "401":
+    $ref: "../../../components/responses/401.yaml"
+  "404":
+    $ref: "../../../components/responses/404.yaml"

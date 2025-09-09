@@ -1,0 +1,31 @@
+type: object
+minProperties: 1
+properties:
+  name:
+    description: "Contact's full name"
+    type: string
+    minLength: 2
+    maxLength: 50
+    example: "John Smith"
+  phoneNumber:
+    description: "Contact's phone number"
+    type: string
+    minLength: 10
+    maxLength: 20
+    pattern: '^[\+]?[\d\s\-\(\)]+$'
+    example: "+380501234567"
+  email:
+    description: "Contact's email address"
+    type: string
+    format: email
+    maxLength: 50
+    example: "john.smith@example.com"
+  isFavourite:
+    description: "Whether the contact is marked as favourite"
+    type: boolean
+    example: true
+  contactType:
+    description: "Type of contact"
+    type: string
+    enum: ["work", "home", "personal"]
+    example: "work"
