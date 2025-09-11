@@ -19,7 +19,7 @@ requestBody:
   content:
     application/json:
       schema:
-        $ref: "../../components/schemas/contactUpdate.yaml"
+        $ref: "../../../components/schemas/contactUpdate.yaml"
       example:
         name: "John Smith"
         isFavourite: true
