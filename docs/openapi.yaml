@@ -22,11 +22,11 @@ paths:
       $ref: ../swagger/paths/contacts/post.yaml
   /contacts/{id}:
     get:
-      $ref: ../swagger/paths/contacts/{contacts}/get.yaml
+      $ref: ../swagger/paths/contacts/{contactId}/get.yaml
     patch:
-      $ref: ../swagger/paths/contacts/{contacts}/patch.yaml
+      $ref: ../swagger/paths/contacts/{contactId}/patch.yaml
     delete:
-      $ref: ../swagger/paths/contacts/{contacts}/delete.yaml
+      $ref: ../swagger/paths/contacts/{contactId}/delete.yaml
   /auth/register:
     post:
       $ref: ../swagger/paths/auth/register/post.yaml
