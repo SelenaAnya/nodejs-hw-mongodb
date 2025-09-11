@@ -28,16 +28,14 @@ parameters:
     schema:
       type: string
       enum:
-        [
-          "_id",
-          "name",
-          "phoneNumber",
-          "email",
-          "contactType",
-          "isFavourite",
-          "createdAt",
-          "updatedAt",
-        ]
+        - "_id"
+        - "name"
+        - "phoneNumber"
+        - "email"
+        - "contactType"
+        - "isFavourite"
+        - "createdAt"
+        - "updatedAt"
       default: "_id"
     description: Field to sort by
     example: "name"
@@ -45,7 +43,9 @@ parameters:
     name: sortOrder
     schema:
       type: string
-      enum: ["asc", "desc"]
+      enum:
+        - "asc"
+        - "desc"
       default: "asc"
     description: Sort order
     example: "asc"
@@ -53,14 +53,19 @@ parameters:
     name: type
     schema:
       type: string
-      enum: ["work", "home", "personal"]
+      enum:
+        - "work"
+        - "home"
+        - "personal"
     description: Filter by contact type
     example: "work"
   - in: query
     name: isFavourite
     schema:
       type: string
-      enum: ["true", "false"]
+      enum:
+        - "true"
+        - "false"
     description: Filter by favourite status
     example: "true"
 responses:
