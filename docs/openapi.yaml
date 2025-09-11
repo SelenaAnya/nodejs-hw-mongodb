@@ -17,19 +17,25 @@ servers:
 paths:
   /contacts:
     get:
-    $ref: 
-    # ../swagger/paths/contacts/get.yaml
+      $ref: ../swagger/paths/contacts/get.yaml
     post:
-    $ref: ../swagger/paths/contacts/post.yaml
-
-  /contacts/{contactId}:
-    delete:
-    $ref: ../swagger/paths/contacts/{contactId}/delete.yaml
-    patch:
-    $ref: ../swagger/paths/contacts/{contactId}/patch.yaml
+      $ref: ../swagger/paths/contacts/post.yaml
+  /contacts/{id}:
     get:
-    $ref: ../swagger/paths/contacts/{contactId}/get.yaml
-
+      $ref: ../swagger/paths/contacts/{contacts}/get.yaml
+    patch:
+      $ref: ../swagger/paths/contacts/{contacts}/patch.yaml
+    delete:
+      $ref: ../swagger/paths/contacts/{contacts}/delete.yaml
+  /auth/register:
+    post:
+      $ref: ../swagger/paths/auth/register/post.yaml
+  /auth/login:
+    post:
+      $ref: ../swagger/paths/auth/login/post.yaml
+  /auth/logout:
+    post:
+      $ref: ../swagger/paths/auth/logout/post.yaml
 components:
   securitySchemes:
     bearerAuth:
