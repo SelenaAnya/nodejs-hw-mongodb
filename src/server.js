@@ -10,7 +10,7 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import contactsRouter from './routers/contacts.js';
 import { UPLOAD_DIR } from './utils/constants.js';
-import { swaggerDocs } from './utils/swagger.js';
+import { swaggerDocs } from './middlewares/swaggerSetup.js';
 import authRouter from './routers/auth.js';
 
 const PORT = Number(env('PORT', '3000'));
