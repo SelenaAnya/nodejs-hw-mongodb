@@ -8,6 +8,10 @@ import { env } from './utils/env.js';
 import router from './routers/index.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
+import contactsRouter from './routers/contacts.js';
+import { UPLOAD_DIR } from './utils/constants.js';
+import { swaggerDocs } from './utils/swagger.js';
+import authRouter from './routers/auth.js';
 
 const PORT = Number(env('PORT', '3000'));
 
@@ -209,6 +213,19 @@ export const setupServer = () => {
         console.log('');
         console.log('💡 Use Authorization: Bearer <token> header for contact endpoints');
     });
+
+      app.use('/auth', authRouter);
+
+  app.use('/contacts', contactsRouter);
+  app.use('/uploads', express.static(UPLOAD_DIR));
+  app.use('/api-docs', swaggerDocs());
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+  app.listen(PORT, () =>
+    console.log(`Web-server succsesfully running on ${PORT}  port`),
+  );
+
 
     return app;
 };
