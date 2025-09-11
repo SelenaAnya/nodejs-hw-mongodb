@@ -9,7 +9,7 @@ import router from './routers/index.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import contactsRouter from './routers/contacts.js';
-import { UPLOAD_DIR } from './utils/constants.js';
+import { UPLOAD_DIR } from './constants/envVars.js';
 import { swaggerDocs } from './middlewares/swaggerSetup.js';
 import authRouter from './routers/auth.js';
 
