@@ -25,48 +25,931 @@ tags:
     description: Operations for managing contacts
   - name: Auth
     description: Authentication operations
+
 servers:
   - url: http://localhost:3000
     description: Development server
   - url: https://your-deployed-app.herokuapp.com
     description: Production server
+
 paths:
   # Auth endpoints
   /auth/register:
     post:
-      $ref: ../swagger/paths/auth/register/post.yaml
+      tags:
+        - Auth
+      summary: Register new user
+      operationId: registerUser
+      description: "Create a new user account"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 50
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "password123"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: "Successfully registered a user!"
+                  data:
+                    $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 409
+                  message:
+                    type: string
+                    example: "Email in use"
+                  data:
+                    type: "null"
+
   /auth/login:
     post:
-      $ref: ../swagger/paths/auth/login/post.yaml
+      tags:
+        - Auth
+      summary: Login user
+      operationId: loginUser
+      description: "Authenticate user and return access token"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        "200":
+          description: Login successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: refreshToken=abc123; HttpOnly; Path=/; Secure; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Successfully logged in an user!
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: Invalid credentials
+                  data:
+                    type: "null"
+
   /auth/refresh:
     post:
-      $ref: ../swagger/paths/auth/refresh/post.yaml
+      tags:
+        - Auth
+      summary: Refresh access token
+      operationId: refreshToken
+      description: "Refresh access token using refresh token from cookies"
+      parameters:
+        - in: cookie
+          name: refreshToken
+          required: true
+          schema:
+            type: string
+          description: Refresh token stored in HTTP-only cookie
+      responses:
+        "200":
+          description: Token refreshed successfully
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: refreshToken=abc123; HttpOnly; Path=/; Secure; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Successfully refreshed a session!
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /auth/logout:
     post:
-      $ref: ../swagger/paths/auth/logout/post.yaml
+      tags:
+        - Auth
+      summary: Logout user
+      operationId: logoutUser
+      description: "Logout user and invalidate session"
+      parameters:
+        - in: cookie
+          name: refreshToken
+          schema:
+            type: string
+          description: Refresh token stored in HTTP-only cookie
+      responses:
+        "204":
+          description: Logout successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: refreshToken=; HttpOnly; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+
   /auth/send-reset-email:
     post:
-      $ref: ../swagger/paths/auth/send-reset-email/post.yaml
+      tags:
+        - Auth
+      summary: Send password reset email
+      operationId: sendResetEmail
+      description: "Send password reset link to user email"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john.doe@example.com"
+      responses:
+        "200":
+          description: Reset email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Reset password email has been successfully sent.
+                  data:
+                    type: object
+                    example: {}
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          description: Email sending failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 500
+                  message:
+                    type: string
+                    example: Failed to send the email, please try again later.
+                  data:
+                    type: "null"
+
   /auth/reset-pwd:
     post:
-      $ref: ../swagger/paths/auth/reset-pwd/post.yaml
+      tags:
+        - Auth
+      summary: Reset password
+      operationId: resetPassword
+      description: "Reset user password using token from email"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+              properties:
+                token:
+                  type: string
+                  description: Reset token from email
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                password:
+                  type: string
+                  minLength: 6
+                  description: New password
+                  example: "newpassword123"
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Password has been successfully reset.
+                  data:
+                    type: object
+                    example: {}
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Token is expired or invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  message:
+                    type: string
+                    example: Token is expired or invalid.
+                  data:
+                    type: "null"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # Contact endpoints
   /contacts:
     get:
-      $ref: ../swagger/paths/contacts/get.yaml
+      tags:
+        - Contacts
+      summary: Get list of contacts
+      operationId: getContacts
+      description: "Retrieve a paginated list of contacts with optional filtering and sorting"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+          example: 1
+        - in: query
+          name: perPage
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of contacts per page
+          example: 10
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum:
+              [
+                "_id",
+                "name",
+                "phoneNumber",
+                "email",
+                "contactType",
+                "isFavourite",
+                "createdAt",
+                "updatedAt",
+              ]
+            default: "_id"
+          description: Field to sort by
+          example: "name"
+        - in: query
+          name: sortOrder
+          schema:
+            type: string
+            enum: ["asc", "desc"]
+            default: "asc"
+          description: Sort order
+          example: "asc"
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: ["work", "home", "personal"]
+          description: Filter by contact type
+          example: "work"
+        - in: query
+          name: isFavourite
+          schema:
+            type: string
+            enum: ["true", "false"]
+          description: Filter by favourite status
+          example: "true"
+      responses:
+        "200":
+          description: Successfully found contacts
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Successfully found contacts!
+                  data:
+                    type: object
+                    required:
+                      - data
+                      - page
+                      - perPage
+                      - totalItems
+                      - totalPages
+                      - hasNextPage
+                      - hasPreviousPage
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Contact"
+                      page:
+                        type: integer
+                        example: 1
+                      perPage:
+                        type: integer
+                        example: 10
+                      totalItems:
+                        type: integer
+                        example: 25
+                      totalPages:
+                        type: integer
+                        example: 3
+                      hasNextPage:
+                        type: boolean
+                        example: true
+                      hasPreviousPage:
+                        type: boolean
+                        example: false
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
     post:
-      $ref: ../swagger/paths/contacts/post.yaml
+      tags:
+        - Contacts
+      summary: Create a new contact
+      operationId: createContact
+      description: "Create a new contact. Supports multipart/form-data for photo upload"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactCreate"
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - phoneNumber
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 50
+                  example: "John Doe"
+                phoneNumber:
+                  type: string
+                  minLength: 10
+                  maxLength: 20
+                  pattern: '^[\+]?[\d\s\-\(\)]+$'
+                  example: "+380501234567"
+                email:
+                  type: string
+                  format: email
+                  maxLength: 50
+                  example: "john.doe@example.com"
+                contactType:
+                  type: string
+                  enum: ["work", "home", "personal"]
+                  default: "personal"
+                isFavourite:
+                  type: boolean
+                  default: false
+                photo:
+                  type: string
+                  format: binary
+                  description: Contact photo (image file, max 5MB)
+      responses:
+        "201":
+          description: Contact created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: Successfully created a contact!
+                  data:
+                    $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /contacts/{contactId}:
     get:
-      $ref: ../swagger/paths/contacts/{contactId}/get.yaml
+      tags:
+        - Contacts
+      summary: Get contact by ID
+      operationId: getContactById
+      description: "Retrieve a specific contact by its unique identifier"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: contactId
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+            example: "65ca67e7ae7f10c88b598384"
+          description: MongoDB ObjectId of the contact
+      responses:
+        "200":
+          description: "Successfully found contact"
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Successfully found contact with id 65ca67e7ae7f10c88b598384!
+                  data:
+                    $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
     patch:
-      $ref: ../swagger/paths/contacts/{contactId}/patch.yaml
+      tags:
+        - Contacts
+      summary: Update contact by ID
+      operationId: updateContact
+      description: "Update an existing contact. Supports partial updates and photo upload"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: contactId
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+            example: "65ca67e7ae7f10c88b598384"
+          description: MongoDB ObjectId of the contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactUpdate"
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 50
+                  example: "John Smith"
+                phoneNumber:
+                  type: string
+                  minLength: 10
+                  maxLength: 20
+                  pattern: '^[\+]?[\d\s\-\(\)]+$'
+                  example: "+380501234567"
+                email:
+                  type: string
+                  format: email
+                  maxLength: 50
+                  example: "john.smith@example.com"
+                contactType:
+                  type: string
+                  enum: ["work", "home", "personal"]
+                isFavourite:
+                  type: boolean
+                photo:
+                  type: string
+                  format: binary
+                  description: Contact photo (image file, max 5MB)
+              minProperties: 1
+      responses:
+        "200":
+          description: Contact updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Successfully patched a contact!
+                  data:
+                    $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
     delete:
-      $ref: ../swagger/paths/contacts/{contactId}/delete.yaml
+      tags:
+        - Contacts
+      summary: Delete contact by ID
+      operationId: deleteContact
+      description: "Delete a specific contact by its unique identifier"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: contactId
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+            example: "65ca67e7ae7f10c88b598384"
+          description: MongoDB ObjectId of the contact
+      responses:
+        "204":
+          description: Contact deleted successfully
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
+
+  schemas:
+    User:
+      type: object
+      required:
+        - _id
+        - name
+        - email
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          description: "User's unique identifier"
+          type: string
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: 65e4decdd286b30065d54af8
+        name:
+          description: "User's full name"
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "John Doe"
+        email:
+          description: "User's email address"
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        createdAt:
+          description: "Timestamp when the user was created"
+          type: string
+          format: date-time
+          example: "2023-12-01T10:30:00.000Z"
+        updatedAt:
+          description: "Timestamp when the user was last updated"
+          type: string
+          format: date-time
+          example: "2023-12-01T15:45:00.000Z"
+
+    Contact:
+      type: object
+      required:
+        - _id
+        - name
+        - phoneNumber
+        - contactType
+        - isFavourite
+        - userId
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          description: "Contact's unique identifier"
+          type: string
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: 65e4decdd286b30065d54af9
+        name:
+          description: "Contact's full name"
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "John Doe"
+        phoneNumber:
+          description: "Contact's phone number"
+          type: string
+          minLength: 10
+          maxLength: 20
+          example: "+380501234567"
+        email:
+          description: "Contact's email address"
+          type: string
+          format: email
+          maxLength: 50
+          example: "john.doe@example.com"
+        isFavourite:
+          description: "Whether the contact is marked as favourite"
+          type: boolean
+          example: false
+        contactType:
+          description: "Type of contact"
+          type: string
+          enum: ["work", "home", "personal"]
+          example: "personal"
+        photo:
+          description: "URL to contact's photo"
+          type: string
+          format: uri
+          example: https://res.cloudinary.com/ddnsttloi/image/upload/v1234567890/contacts/contact_photo.png
+        userId:
+          description: "ID of the user who owns this contact"
+          type: string
+          pattern: "^[0-9a-fA-F]{24}$"
+          example: 65e4decdd286b30065d54af8
+        createdAt:
+          description: "Timestamp when the contact was created"
+          type: string
+          format: date-time
+          example: "2023-12-01T10:30:00.000Z"
+        updatedAt:
+          description: "Timestamp when the contact was last updated"
+          type: string
+          format: date-time
+          example: "2023-12-01T15:45:00.000Z"
+
+    ContactCreate:
+      type: object
+      required:
+        - name
+        - phoneNumber
+      properties:
+        name:
+          description: "Contact's full name"
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "John Doe"
+        phoneNumber:
+          description: "Contact's phone number"
+          type: string
+          minLength: 10
+          maxLength: 20
+          pattern: '^[\+]?[\d\s\-\(\)]+$'
+          example: "+380501234567"
+        email:
+          description: "Contact's email address (optional)"
+          type: string
+          format: email
+          maxLength: 50
+          example: "john.doe@example.com"
+        isFavourite:
+          description: "Whether the contact is marked as favourite"
+          type: boolean
+          default: false
+          example: false
+        contactType:
+          description: "Type of contact"
+          type: string
+          enum: ["work", "home", "personal"]
+          default: "personal"
+          example: "personal"
+
+    ContactUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          description: "Contact's full name"
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "John Smith"
+        phoneNumber:
+          description: "Contact's phone number"
+          type: string
+          minLength: 10
+          maxLength: 20
+          pattern: '^[\+]?[\d\s\-\(\)]+$'
+          example: "+380501234567"
+        email:
+          description: "Contact's email address"
+          type: string
+          format: email
+          maxLength: 50
+          example: "john.smith@example.com"
+        isFavourite:
+          description: "Whether the contact is marked as favourite"
+          type: boolean
+          example: true
+        contactType:
+          description: "Type of contact"
+          type: string
+          enum: ["work", "home", "personal"]
+          example: "work"
+
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid input data
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - status
+              - message
+            properties:
+              status:
+                type: integer
+                example: 400
+              message:
+                type: string
+                example: "Validation error: Name must be at least 2 characters long"
+              data:
+                type: "null"
+                example: null
+
+    Unauthorized:
+      description: Unauthorized - Authentication required or invalid token
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - status
+              - message
+            properties:
+              status:
+                type: integer
+                example: 401
+              message:
+                type: string
+                example: "Access token expired"
+              data:
+                type: "null"
+                example: null
+
+    NotFound:
+      description: Not Found - Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - status
+              - message
+            properties:
+              status:
+                type: integer
+                example: 404
+              message:
+                type: string
+                example: "Contact not found"
+              data:
+                type: "null"
+                example: null
