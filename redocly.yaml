@@ -7,7 +7,6 @@ extends:
 rules:
   no-unused-components: error
 
-# Theme configuration for preview-docs command
 theme:
   openapi:
     htmlTemplate: ./docs/index.html
