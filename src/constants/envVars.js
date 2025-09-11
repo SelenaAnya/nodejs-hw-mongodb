@@ -19,3 +19,6 @@ export const MONGODB_DB = 'MONGODB_DB';
 export const PORT = 'PORT';
 export const NODE_ENV = 'NODE_ENV';
 export const SMTP_FROM = 'SMTP_FROM';
+
+export const GOOGLE_CLIENT_ID = 'GOOGLE_CLIENT_ID';
+export const GOOGLE_CLIENT_SECRET = 'GOOGLE_CLIENT_SECRET';

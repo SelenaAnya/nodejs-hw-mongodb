@@ -13,7 +13,7 @@ tags:
     description: Auth operations
 servers:
   - url: http://localhost:3000
-  - url: https://nodejs-hw-mongodb-3-4hc6.onrender.com
+  - url: https://hw7-swagger-lmoe.onrender.com
 paths:
   /contacts:
     get:

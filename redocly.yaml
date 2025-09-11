@@ -7,6 +7,7 @@ extends:
 rules:
   no-unused-components: error
 
+theme:
   openapi:
     htmlTemplate: ./docs/index.html
     theme:
