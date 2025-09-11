@@ -39,7 +39,7 @@ const bootstrap = async () => {
         await initMongoConnection();
         console.log('Database connection established');
 
-        // Перевірити SMTP підключення
+        // Check SMTP connection
         const emailOk = await verifyEmailConnection();
         if (!emailOk) {
             console.warn(' Email service unavailable - password reset may not work');
