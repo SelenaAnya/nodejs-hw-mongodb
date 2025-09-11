@@ -219,7 +219,6 @@ export const setupServer = () => {
     app.use('/api-docs', swaggerDocs());
 
   app.use(notFoundHandler);
-  app.use(errorHandler);
   app.listen(PORT, () =>
     console.log(`Web-server succsesfully running on ${PORT}  port`),
   );
