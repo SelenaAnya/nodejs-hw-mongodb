@@ -213,15 +213,17 @@ export const setupServer = () => {
         console.log('💡 Use Authorization: Bearer <token> header for contact endpoints');
     });
 
-      app.use('/auth', authRouter);
+    app.use('/auth', authRouter);
+    app.use('/contacts', contactsRouter);
+    if (process.env.NODE_ENV !== 'production') {
+        app.use('/api-docs', swaggerDocs());
+    }
 
-  app.use('/contacts', contactsRouter);
-    app.use('/api-docs', swaggerDocs());
 
-  app.use(notFoundHandler);
-  app.listen(PORT, () =>
-    console.log(`Web-server succsesfully running on ${PORT}  port`),
-  );
+    app.use(notFoundHandler);
+    app.listen(PORT, () =>
+        console.log(`Web-server succsesfully running on ${PORT}  port`),
+    );
 
 
     return app;
