@@ -1,53 +1,31 @@
-// import express from 'express';
-// import pino from 'pino-http';
-// import cors from 'cors';
-// import cookieParser from 'cookie-parser';
-// import rateLimit from 'express-rate-limit';
-
-// import { env } from './utils/env.js';
-// import router from './routers/index.js';
-// import { errorHandler } from './middlewares/errorHandler.js';
-// import { notFoundHandler } from './middlewares/notFoundHandler.js';
-// import contactsRouter from './routers/contacts.js';
-// import { swaggerDocs } from './middlewares/swaggerSetup.js';
-// import authRouter from './routers/auth.js';
-
-
 const express = require('express');
 const path = require('path');
+const { corsMiddleware, docsMiddleware } = require('./middlewares/cors');
+
 const app = express();
 
-// Обслуговування статичних файлів для документації
+// Застосовуємо CORS middleware
+app.use(corsMiddleware);
+
+// Застосовуємо спеціальний middleware для документації
+app.use(docsMiddleware);
+
+// Обслуговування статичних файлів документації
 app.use('/docs', express.static(path.join(__dirname, 'docs')));
 
-// Альтернативно, якщо використовуєте swagger-ui-express
+// Якщо використовуєте swagger-ui-express
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./docs/swagger.json');
 
-// Налаштування для production
-const swaggerOptions = {
-    explorer: true,
-    swaggerOptions: {
-        // Вказати правильний URL для production
-        urls: [
-            {
-                url: process.env.NODE_ENV === 'production'
-                    ? 'https://hw7-swagger-lmoe.onrender.com/docs/swagger.json'
-                    : 'http://localhost:3000/docs/swagger.json',
-                name: 'Contact API'
-            }
-        ]
-    }
-};
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
+// Ваші інші маршрути...
+app.use('/auth', require('./routes/auth'));
+app.use('/contacts', require('./routes/contacts'));
 
-// Маршрут для OpenAPI JSON
-app.get('/docs/swagger.json', (req, res) => {
-    res.json(swaggerDocument);
-});
+// Діагностичні маршрути (для розробки)
+if (process.env.NODE_ENV !== 'production') {
+    app.use('/debug', require('./routes/debug'));
+}
 
-// Маршрут для OpenAPI YAML (якщо потрібен)
-app.get('/docs/openapi.yaml', (req, res) => {
-    res.sendFile(path.join(__dirname, 'docs', 'openapi.yaml'));
-});
+module.exports = app;
