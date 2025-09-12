@@ -1,76 +1,17 @@
-import { config } from 'dotenv';
-import { setupServer } from './server.js';
+import setupServer from './server.js';
 import { initMongoConnection } from './db/initMongoConnection.js';
 import { createDirIfNotExists } from './utils/createDirIfNotExists.js';
 import { TEMP_UPLOAD_DIR, UPLOAD_DIR } from './constants/index.js';
-import { verifyEmailConnection } from './utils/sendMail.js';
 
-// Load environment variables
-config();
 
-// const bootstrap = async () => {
-//     try {
-//         console.log('Starting application bootstrap...');
-
-//         // Initialize MongoDB connection
-//         await initMongoConnection();
-//         console.log('Database connection established');
-
-//         // Create upload directories
-//         await createDirIfNotExists(TEMP_UPLOAD_DIR);
-//         await createDirIfNotExists(UPLOAD_DIR);
-//         console.log('Upload directories created');
-
-//         // Setup and start server
-//         setupServer();
-//         console.log('Server setup completed');
-
-//     } catch (error) {
-//         console.error('Failed to start application:', error);
-//         process.exit(1);
-//     }
-// };
-
+import dotenv from 'dotenv';
+dotenv.config();
 
 const bootstrap = async () => {
-    try {
-        console.log('Starting application bootstrap...');
-
-        await initMongoConnection();
-        console.log('Database connection established');
-
-        // Check SMTP connection
-        const emailOk = await verifyEmailConnection();
-        if (!emailOk) {
-            console.warn(' Email service unavailable - password reset may not work');
-        }
-
-        // Create upload directories
-        await createDirIfNotExists(TEMP_UPLOAD_DIR);
-        await createDirIfNotExists(UPLOAD_DIR);
-        console.log('Upload directories created');
-
-        // Setup and start server
-        setupServer();
-        console.log('Server setup completed');
-
-    } catch (error) {
-        console.error('Failed to start application:', error);
-        process.exit(1);
-    }
+    await initMongoConnection();
+    await createDirIfNotExists(TEMP_UPLOAD_DIR);
+    await createDirIfNotExists(UPLOAD_DIR);
+    setupServer();
 };
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    process.exit(1);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
-});
-
-// Start the application
-bootstrap();
+void bootstrap();
