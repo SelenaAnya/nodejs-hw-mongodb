@@ -20,7 +20,7 @@ paths:
       $ref: ../swagger/paths/contacts/get.yaml
     post:
       $ref: ../swagger/paths/contacts/post.yaml
-  /contacts/{id}:
+  /contacts/{contactId}:
     get:
       $ref: ../swagger/paths/contacts/{contactId}/get.yaml
     patch:
@@ -36,9 +36,34 @@ paths:
   /auth/logout:
     post:
       $ref: ../swagger/paths/auth/logout/post.yaml
+  /auth/refresh:
+    post:
+      $ref: ../swagger/paths/auth/refresh/post.yaml
+  /auth/send-reset-email:
+    post:
+      $ref: ../swagger/paths/auth/send-reset-email/post.yaml
+  /auth/reset-pwd:
+    post:
+      $ref: ../swagger/paths/auth/reset-pwd/post.yaml
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-
+      bearerFormat: JWT
+  schemas:
+    contact:
+      $ref: ../swagger/components/schemas/contact.yaml
+    contactCreate:
+      $ref: ../swagger/components/schemas/contactCreate.yaml
+    contactUpdate:
+      $ref: ../swagger/components/schemas/contactUpdate.yaml
+    user:
+      $ref: ../swagger/components/schemas/user.yaml
+  responses:
+    400:
+      $ref: ../swagger/components/responses/400.yaml
+    401:
+      $ref: ../swagger/components/responses/401.yaml
+    404:
+      $ref: ../swagger/components/responses/404.yaml

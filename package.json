@@ -8,6 +8,9 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "seed": "node src/scripts/seedContacts.js",
+    "kill-port": "npx kill-port 3000",
+    "dev:clean": "npx kill-port 3000 && npm run dev",
+    "start:clean": "npx kill-port 3000 && npm start",
     "build": "npm run build-docs",
     "build-docs": "redocly bundle docs/openapi.yaml --ext json -o docs/swagger.json",
     "preview-docs": "redocly preview"
