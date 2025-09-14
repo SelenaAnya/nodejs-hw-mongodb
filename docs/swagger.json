@@ -208,7 +208,7 @@
         ],
         "summary": "Create a new contact",
         "operationId": "createContact",
-        "description": "Create a new contact. Supports multipart/form-data for photo upload",
+        "description": "Create a new contact with photo upload support",
         "security": [
           {
             "bearerAuth": []
@@ -217,18 +217,6 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/contactCreate"
-              },
-              "example": {
-                "name": "John Doe",
-                "phoneNumber": "+380501234567",
-                "email": "john.doe@example.com",
-                "contactType": "personal",
-                "isFavourite": false
-              }
-            },
             "multipart/form-data": {
               "schema": {
                 "type": "object",
@@ -241,20 +229,23 @@
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 50,
-                    "example": "John Doe"
+                    "example": "John Doe",
+                    "description": "Contact's full name"
                   },
                   "phoneNumber": {
                     "type": "string",
                     "minLength": 10,
                     "maxLength": 20,
                     "pattern": "^[\\+]?[\\d\\s\\-\\(\\)]+$",
-                    "example": "+380501234567"
+                    "example": "+380501234567",
+                    "description": "Contact's phone number"
                   },
                   "email": {
                     "type": "string",
                     "format": "email",
                     "maxLength": 50,
-                    "example": "john.doe@example.com"
+                    "example": "john.doe@example.com",
+                    "description": "Contact's email address (optional)"
                   },
                   "contactType": {
                     "type": "string",
@@ -263,11 +254,15 @@
                       "home",
                       "personal"
                     ],
-                    "default": "personal"
+                    "default": "personal",
+                    "example": "personal",
+                    "description": "Type of contact"
                   },
                   "isFavourite": {
                     "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "example": false,
+                    "description": "Whether the contact is marked as favourite"
                   },
                   "photo": {
                     "type": "string",
@@ -317,7 +312,7 @@
         }
       }
     },
-    "/contacts/{id}": {
+    "/contacts/{contactId}": {
       "get": {
         "tags": [
           "Contacts"
@@ -389,7 +384,7 @@
         ],
         "summary": "Update contact by ID",
         "operationId": "updateContact",
-        "description": "Update an existing contact. Supports partial updates and photo upload",
+        "description": "Update an existing contact with photo upload support. Supports partial updates",
         "security": [
           {
             "bearerAuth": []
@@ -411,37 +406,32 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/contactUpdate"
-              },
-              "example": {
-                "name": "John Smith",
-                "isFavourite": true
-              }
-            },
             "multipart/form-data": {
               "schema": {
                 "type": "object",
+                "minProperties": 1,
                 "properties": {
                   "name": {
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 50,
-                    "example": "John Smith"
+                    "example": "John Smith",
+                    "description": "Contact's full name"
                   },
                   "phoneNumber": {
                     "type": "string",
                     "minLength": 10,
                     "maxLength": 20,
                     "pattern": "^[\\+]?[\\d\\s\\-\\(\\)]+$",
-                    "example": "+380501234567"
+                    "example": "+380501234567",
+                    "description": "Contact's phone number"
                   },
                   "email": {
                     "type": "string",
                     "format": "email",
                     "maxLength": 50,
-                    "example": "john.smith@example.com"
+                    "example": "john.smith@example.com",
+                    "description": "Contact's email address"
                   },
                   "contactType": {
                     "type": "string",
@@ -449,18 +439,21 @@
                       "work",
                       "home",
                       "personal"
-                    ]
+                    ],
+                    "example": "work",
+                    "description": "Type of contact"
                   },
                   "isFavourite": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": true,
+                    "description": "Whether the contact is marked as favourite"
                   },
                   "photo": {
                     "type": "string",
                     "format": "binary",
                     "description": "Contact photo (image file, max 5MB)"
                   }
-                },
-                "minProperties": 1
+                }
               }
             }
           }
@@ -782,13 +775,326 @@
           }
         }
       }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Refresh access token",
+        "operationId": "refreshToken",
+        "description": "Refresh access token using refresh token from cookies",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "refreshToken",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Refresh token stored in HTTP-only cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "refreshToken=abc123; HttpOnly; Path=/; Secure; SameSite=Strict"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Successfully refreshed a session!"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string",
+                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh token is required or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Refresh token is required"
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/send-reset-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Send password reset email",
+        "operationId": "sendResetEmail",
+        "description": "Send password reset link to user email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "john.doe@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset email sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Reset password email has been successfully sent."
+                    },
+                    "data": {
+                      "type": "object",
+                      "example": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User not found!"
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Email sending failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Failed to send the email, please try again later."
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-pwd": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Reset password",
+        "operationId": "resetPassword",
+        "description": "Reset user password using token from email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token",
+                  "password"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "Reset token from email",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "description": "New password",
+                    "example": "newpassword123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "message",
+                    "data"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Password has been successfully reset."
+                    },
+                    "data": {
+                      "type": "object",
+                      "example": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "description": "Token is expired or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Token is expired or invalid."
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User not found!"
+                    },
+                    "data": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",
-        "scheme": "bearer"
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     },
     "schemas": {

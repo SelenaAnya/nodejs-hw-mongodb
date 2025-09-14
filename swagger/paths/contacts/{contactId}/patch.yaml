@@ -2,7 +2,7 @@ tags:
   - Contacts
 summary: Update contact by ID
 operationId: updateContact
-description: "Update an existing contact. Supports partial updates and photo upload"
+description: "Update an existing contact with photo upload support. Supports partial updates"
 security:
   - bearerAuth: []
 parameters:
@@ -17,42 +17,43 @@ parameters:
 requestBody:
   required: true
   content:
-    application/json:
-      schema:
-        $ref: "../../../components/schemas/contactUpdate.yaml"
-      example:
-        name: "John Smith"
-        isFavourite: true
     multipart/form-data:
       schema:
         type: object
+        minProperties: 1
         properties:
           name:
             type: string
             minLength: 2
             maxLength: 50
             example: "John Smith"
+            description: "Contact's full name"
           phoneNumber:
             type: string
             minLength: 10
             maxLength: 20
             pattern: '^[\+]?[\d\s\-\(\)]+$'
             example: "+380501234567"
+            description: "Contact's phone number"
           email:
             type: string
             format: email
             maxLength: 50
             example: "john.smith@example.com"
+            description: "Contact's email address"
           contactType:
             type: string
             enum: ["work", "home", "personal"]
+            example: "work"
+            description: "Type of contact"
           isFavourite:
             type: boolean
+            example: true
+            description: "Whether the contact is marked as favourite"
           photo:
             type: string
             format: binary
-            description: Contact photo (image file, max 5MB)
-        minProperties: 1
+            description: "Contact photo (image file, max 5MB)"
 responses:
   "200":
     description: Contact updated successfully
@@ -70,7 +71,7 @@ responses:
               example: 200
             message:
               type: string
-              example: Successfully patched a contact!
+              example: "Successfully patched a contact!"
             data:
               $ref: "../../../components/schemas/contact.yaml"
   "400":
