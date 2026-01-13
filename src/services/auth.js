@@ -1,0 +1,275 @@
+import createHttpError from 'http-errors';
+import bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
+import jwt from 'jsonwebtoken';
+
+import { UsersCollection } from '../db/models/user.js';
+import { SessionsCollection } from '../db/models/session.js';
+
+import {
+    FIFTEEN_MINUTES,
+    THIRTY_DAYS,
+} from '../constants/index.js';
+import { env } from '../utils/env.js';
+import { sendEmail } from '../utils/sendMail.js';
+
+
+
+const createSession = () => {
+    const accessToken = randomBytes(30).toString('base64');
+    const refreshToken = randomBytes(30).toString('base64');
+
+    return {
+        accessToken,
+        refreshToken,
+        accessTokenValidUntil: new Date(Date.now() + FIFTEEN_MINUTES),
+        refreshTokenValidUntil: new Date(Date.now() + THIRTY_DAYS),
+    };
+};
+
+export const registerUser = async (payload) => {
+    console.log('Registering user with email:', payload.email);
+
+    // Check if the user already exists
+    const existingUser = await UsersCollection.findOne({
+        email: payload.email.toLowerCase()
+    });
+
+    if (existingUser) {
+        console.log('User already exists:', payload.email);
+        throw createHttpError(409, 'Email in use');
+    }
+
+    // Additional validation
+    if (!payload.name || payload.name.trim().length < 2) {
+        throw createHttpError(400, 'Name must be at least 2 characters long');
+    }
+
+    if (!payload.password || payload.password.length < 6) {
+        throw createHttpError(400, 'Password must be at least 6 characters long');
+    }
+
+    // Password hashing
+    const encryptedPassword = await bcrypt.hash(payload.password, 10);
+
+    // Create a user with a normalized email
+    const user = await UsersCollection.create({
+        ...payload,
+        email: payload.email.toLowerCase(),
+        name: payload.name.trim(),
+        password: encryptedPassword,
+    });
+
+    console.log('User registered successfully:', user._id);
+    return user;
+};
+
+export const loginUser = async (payload) => {
+    console.log('Login attempt for email:', payload.email);
+
+    if (!payload.email || !payload.password) {
+        throw createHttpError(400, 'Email and password are required');
+    }
+
+    const user = await UsersCollection.findOne({
+        email: payload.email.toLowerCase()
+    });
+
+    if (!user) {
+        console.log('User not found:', payload.email);
+        throw createHttpError(401, 'Invalid credentials');
+    }
+
+    const isEqual = await bcrypt.compare(payload.password, user.password);
+    if (!isEqual) {
+        console.log('Invalid password for user:', payload.email);
+        throw createHttpError(401, 'Invalid credentials');
+    }
+
+    // Delete the previous user session
+    await SessionsCollection.deleteMany({ userId: user._id });
+
+    const newSession = createSession();
+
+    const session = await SessionsCollection.create({
+        userId: user._id,
+        ...newSession,
+    });
+
+    console.log('Login successful for user:', user._id);
+    return session;
+};
+
+export const refreshUsersSession = async ({ refreshToken }) => {
+    console.log('Refreshing session');
+
+    if (!refreshToken) {
+        throw createHttpError(401, 'Refresh token is required');
+    }
+
+    const session = await SessionsCollection.findOne({ refreshToken });
+
+    if (!session) {
+        console.log('Session not found for refresh token');
+        throw createHttpError(401, 'Session not found');
+    }
+
+    const isSessionTokenExpired =
+        new Date() > new Date(session.refreshTokenValidUntil);
+
+    if (isSessionTokenExpired) {
+        console.log('Refresh token expired');
+
+        await SessionsCollection.deleteOne({ _id: session._id });
+        throw createHttpError(401, 'Session token expired');
+    }
+
+    // Delete an old session
+    await SessionsCollection.deleteOne({ _id: session._id });
+
+    const newSession = createSession();
+
+    const createdSession = await SessionsCollection.create({
+        userId: session.userId,
+        ...newSession,
+    });
+
+    console.log('Session refreshed successfully');
+    return createdSession;
+};
+
+export const logoutUser = async (refreshToken) => {
+    console.log('Logging out user');
+
+    if (!refreshToken) {
+        return; // We don't quit, we just go back
+    }
+
+    const result = await SessionsCollection.deleteOne({ refreshToken });
+    console.log('Sessions deleted:', result.deletedCount);
+};
+
+
+export const requestResetToken = async (email) => {
+    const user = await UsersCollection.findOne({
+        email: email.toLowerCase().trim()
+    });
+
+    if (!user) {
+        throw createHttpError(404, 'User not found!');
+    }
+
+    const resetToken = jwt.sign(
+        {
+            sub: user._id,
+            email,
+        },
+        env('JWT_SECRET'),
+        {
+            expiresIn: '5m',
+        },
+    );
+
+    try {
+        console.log('=== SMTP CONFIG DEBUG ===');
+        console.log('SMTP_HOST:', env('SMTP_HOST'));
+        console.log('SMTP_PORT:', env('SMTP_PORT'));
+        console.log('SMTP_SECURE:', env('SMTP_SECURE'));
+        console.log('SMTP_USER:', env('SMTP_USER'));
+        console.log('SMTP_FROM:', env('SMTP_FROM'));
+        console.log('APP_DOMAIN:', env('APP_DOMAIN'));
+        console.log('Token generated:', !!resetToken);
+        console.log('=========================');
+
+        const resetUrl = `${env('APP_DOMAIN')}/reset-password?token=${resetToken}`;
+
+        // Check connection before sending email
+        const { verifyEmailConnection } = await import('../utils/sendMail.js');
+        const connectionOk = await verifyEmailConnection();
+
+        if (!connectionOk) {
+            throw new Error('SMTP connection failed');
+        }
+
+        const emailOptions = {
+            from: env('SMTP_FROM'),
+            to: email,
+            subject: 'Reset your password',
+            html: `
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2>Password Reset Request</h2>
+                    <p>You have requested to reset your password. Click the link below to reset it:</p>
+                    <p style="margin: 20px 0;">
+                        <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            Reset Password
+                        </a>
+                    </p>
+                    <p>This link will expire in 5 minutes.</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                </div>
+            `,
+        };
+
+        console.log('Sending email with options:', JSON.stringify(emailOptions, null, 2));
+
+        const { sendEmail } = await import('../utils/sendMail.js');
+        const result = await sendEmail(emailOptions);
+
+        console.log('Email sent successfully!', result.messageId);
+    } catch (error) {
+        console.error('Email sending error details:', {
+            message: error.message,
+            code: error.code,
+            response: error.response,
+            responseCode: error.responseCode,
+            stack: error.stack
+        });
+
+        // Custom error messages
+        let errorMessage = 'Failed to send the email, please try again later.';
+
+        if (error.code === 'EAUTH') {
+            errorMessage = 'Email authentication failed. Please check SMTP credentials.';
+        } else if (error.code === 'ECONNECTION') {
+            errorMessage = 'Cannot connect to email server. Please try again later.';
+        } else if (error.response && error.response.includes('Invalid login')) {
+            errorMessage = 'Email server rejected login credentials.';
+        }
+
+        throw createHttpError(500, errorMessage);
+    }
+
+    return resetToken;
+};
+
+export const resetPassword = async (payload) => {
+    let entries;
+
+    try {
+        entries = jwt.verify(payload.token, env('JWT_SECRET'));
+    } catch (err) {
+        if (err instanceof Error) {
+            throw createHttpError(401, 'Token is expired or invalid.');
+        }
+        throw err;
+    }
+
+    const user = await UsersCollection.findOne({
+        email: entries.email,
+        _id: entries.sub,
+    });
+
+    if (!user) {
+        throw createHttpError(404, 'User not found!');
+    }
+
+    const encryptedPassword = await bcrypt.hash(payload.password, 10);
+
+    await UsersCollection.updateOne(
+        { _id: user._id },
+        { password: encryptedPassword },
+    );
+
+    // Delete all user sessions for security
+    await SessionsCollection.deleteMany({ userId: user._id });
+};
