@@ -1,0 +1,78 @@
+import createHttpError from 'http-errors';
+import { THIRTY_DAYS } from '../constants/index.js';
+import {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshUsersSession
+} from '../services/auth.js';
+
+const setupSession = (res, session) => {
+    res.cookie('refreshToken', session.refreshToken, {
+        httpOnly: true,
+        expires: new Date(Date.now() + THIRTY_DAYS),
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+    });
+};
+
+export const registerUserController = async (req, res) => {
+    console.log('Registration attempt:', req.body.email);
+
+    const user = await registerUser(req.body);
+
+    res.status(201).json({
+        status: 201,
+        message: 'Successfully registered a user!',
+        data: user,
+    });
+};
+
+export const loginUserController = async (req, res) => {
+    console.log('Login attempt:', req.body.email);
+
+    const session = await loginUser(req.body);
+
+    setupSession(res, session);
+
+    res.json({
+        status: 200,
+        message: 'Successfully logged in an user!',
+        data: {
+            accessToken: session.accessToken,
+        },
+    });
+};
+
+export const refreshUserController = async (req, res) => {
+    console.log('Token refresh attempt');
+
+    if (!req.cookies.refreshToken) {
+        throw createHttpError(401, 'Refresh token is required');
+    }
+
+    const session = await refreshUsersSession({
+        refreshToken: req.cookies.refreshToken,
+    });
+
+    setupSession(res, session);
+
+    res.json({
+        status: 200,
+        message: 'Successfully refreshed a session!',
+        data: {
+            accessToken: session.accessToken,
+        },
+    });
+};
+
+export const logoutUserController = async (req, res) => {
+    console.log('Logout attempt');
+
+    if (req.cookies.refreshToken) {
+        await logoutUser(req.cookies.refreshToken);
+    }
+
+    res.clearCookie('refreshToken');
+    res.status(204).send();
+};
