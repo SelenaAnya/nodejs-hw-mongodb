@@ -1,0 +1,19 @@
+tags:
+  - Auth
+summary: Logout user
+operationId: logoutUser
+description: "Logout user and invalidate session"
+parameters:
+  - in: cookie
+    name: refreshToken
+    schema:
+      type: string
+    description: Refresh token stored in HTTP-only cookie
+responses:
+  "204":
+    description: Logout successful
+    headers:
+      Set-Cookie:
+        schema:
+          type: string
+          example: refreshToken=; HttpOnly; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT

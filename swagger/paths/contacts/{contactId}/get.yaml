@@ -1,0 +1,42 @@
+tags:
+  - Contacts
+summary: Get contact by ID
+operationId: getContactById
+description: "Retrieve a specific contact by its unique identifier"
+security:
+  - bearerAuth: []
+parameters:
+  - in: path
+    name: contactId
+    required: true
+    schema:
+      type: string
+      pattern: "^[0-9a-fA-F]{24}$"
+      example: "65ca67e7ae7f10c88b598384"
+    description: MongoDB ObjectId of the contact
+responses:
+  "200":
+    description: "Successfully found contact"
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully found contact with id 65ca67e7ae7f10c88b598384!
+            data:
+              $ref: "../../../components/schemas/contact.yaml"
+  "400":
+    $ref: "../../../components/responses/400.yaml"
+  "401":
+    $ref: "../../../components/responses/401.yaml"
+  "404":
+    $ref: "../../../components/responses/404.yaml"
