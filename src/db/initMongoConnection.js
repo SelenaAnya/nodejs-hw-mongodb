@@ -2,14 +2,13 @@ import mongoose from 'mongoose';
 
 const initMongoConnection = async () => {
     try {
-        const user = process.env.MONGODB_USER;
-        const password = process.env.MONGODB_PASSWORD;
-        const url = process.env.MONGODB_URL;
-        const db = process.env.MONGODB_DB;
+        const mongoUrl = process.env.MONGODB_URL;
 
-        await mongoose.connect(
-            `mongodb+srv://${user}:${password}@${url}/${db}?retryWrites=true&w=majority`,
-        );
+        if (!mongoUrl) {
+            throw new Error('MONGODB_URL is not defined in environment variables');
+        }
+
+        await mongoose.connect(mongoUrl);
 
         console.log('Mongo connection successfully established!');
     } catch (error) {

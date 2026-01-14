@@ -8,16 +8,21 @@ const PORT = Number(process.env.PORT) || 3000;
 export const setupServer = () => {
     const app = express();
 
+
     app.use(
         pino({
-            transport: {
+            transport: process.env.NODE_ENV !== 'production' ? {
                 target: 'pino-pretty',
-            },
+                options: {
+                    colorize: true
+                }
+            } : undefined,
         }),
     );
 
     app.use(cors());
     app.use(express.json());
+
 
     app.use(contactsRouter);
 
